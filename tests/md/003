@@ -33,33 +33,33 @@ test() {
 	nvme_1="${TEST_DEVS[1]}"
 	nvme_2="${TEST_DEVS[2]}"
 	
-	echo "nvme_0="$nvme_0
-	echo "nvme_1="$nvme_1
-	echo "nvme_2="$nvme_2
+#	echo "nvme_0="$nvme_0
+#	echo "nvme_1="$nvme_1
+#	echo "nvme_2="$nvme_2
 
 	for i in "${!TEST_DEV_SYSFS_DIRS[@]}"; do
 		TEST_DEV=${TEST_DEV_SYSFS_DIRS[$i]}
-		echo "looping b0 TEST_DEV_SYSFS_DIRS and found i="$i" TEST_DEV="$TEST_DEV
+#		echo "looping b0 TEST_DEV_SYSFS_DIRS and found i="$i" TEST_DEV="$TEST_DEV
 		if readlink -f "$TEST_DEV" | grep -q nvme; then
-			echo "looping b1 good i="$i" TEST_DEV="$TEST_DEV
+#			echo "looping b1 good i="$i" TEST_DEV="$TEST_DEV
 			NVME_TEST_DEVS["$testdev_count"]="$i";
 			NVME_TEST_DEVS_SYSFS["$testdev_count"]="$TEST_DEV";
-			echo "looping b2b good NVME_TEST_DEVS="$NVME_TEST_DEVS[$testdev_count]" testdev_count="$testdev_count
-			echo "looping b2c good NVME_TEST_DEVS_SYSFS="$NVME_TEST_DEVS_SYSFS[$testdev_count]" testdev_count="$testdev_count
+#			echo "looping b2b good NVME_TEST_DEVS="$NVME_TEST_DEVS[$testdev_count]" testdev_count="$testdev_count
+#			echo "looping b2c good NVME_TEST_DEVS_SYSFS="$NVME_TEST_DEVS_SYSFS[$testdev_count]" testdev_count="$testdev_count
 			let testdev_count=testdev_count+1;
 		else
 			echo "looping b3 bad "$i
 		fi
 	done
 
-	for i in "${!NVME_TEST_DEVS[@]}"; do
-		NVME_TEST_DEV="${NVME_TEST_DEVS[$i]}"
-		echo "looping d NVME_TEST_DEVS and found i="$i" NVME_TEST_DEV="$NVME_TEST_DEV
-	done
-	for i in "${!NVME_TEST_DEVS_SYSFS[@]}"; do
-		NVME_TEST_DEV_SYSFS="${NVME_TEST_DEVS_SYSFS[$i]}"
-		echo "looping e NVME_TEST_DEV_SYSFS and found i="$i" NVME_TEST_DEV_SYSFS="$NVME_TEST_DEV_SYSFS
-	done
+#	for i in "${!NVME_TEST_DEVS[@]}"; do
+#		NVME_TEST_DEV="${NVME_TEST_DEVS[$i]}"
+#		echo "looping d NVME_TEST_DEVS and found i="$i" NVME_TEST_DEV="$NVME_TEST_DEV
+#	done
+#	for i in "${!NVME_TEST_DEVS_SYSFS[@]}"; do
+#		NVME_TEST_DEV_SYSFS="${NVME_TEST_DEVS_SYSFS[$i]}"
+#		echo "looping e NVME_TEST_DEV_SYSFS and found i="$i" NVME_TEST_DEV_SYSFS="$NVME_TEST_DEV_SYSFS
+#	done
 
 
 	for ((i = 0; i < ${#NVME_TEST_DEVS[@]}; ++i)); do
@@ -67,9 +67,9 @@ test() {
 		position=$(( $i + 1 ))
 		TEST_DEV_SYSFS="${NVME_TEST_DEVS_SYSFS[$i]}"
 		TEST_DEV="${NVME_TEST_DEVS[$i]}"
-		echo "x $position,${NVME_TEST_DEVS[$i]},${NVME_TEST_DEVS_SYSFS[$i]}"
-		echo "y TEST_DEV_SYSFS="$TEST_DEV_SYSFS
-		echo "z TEST_DEV="$TEST_DEV
+#		echo "x $position,${NVME_TEST_DEVS[$i]},${NVME_TEST_DEVS_SYSFS[$i]}"
+#		echo "y TEST_DEV_SYSFS="$TEST_DEV_SYSFS
+#		echo "z TEST_DEV="$TEST_DEV
 		_require_device_support_atomic_writes
 	done
 
@@ -81,15 +81,15 @@ test() {
 		return 1
 	fi
 
-	echo "sanity NVME_TEST_DEVS 0=""${NVME_TEST_DEVS[0]}"
-	echo "sanity NVME_TEST_DEVS 1=""${NVME_TEST_DEVS[1]}"
-	echo "sanity NVME_TEST_DEVS 2=""${NVME_TEST_DEVS[2]}"
-	echo "sanity NVME_TEST_DEVS 3=""${NVME_TEST_DEVS[3]}"
+#	echo "sanity NVME_TEST_DEVS 0=""${NVME_TEST_DEVS[0]}"
+#	echo "sanity NVME_TEST_DEVS 1=""${NVME_TEST_DEVS[1]}"
+#	echo "sanity NVME_TEST_DEVS 2=""${NVME_TEST_DEVS[2]}"
+#	echo "sanity NVME_TEST_DEVS 3=""${NVME_TEST_DEVS[3]}"
 
-	echo "sanity NVME_TEST_DEVS_SYSFS 0=""${NVME_TEST_DEVS_SYSFS[0]}"
-	echo "sanity NVME_TEST_DEVS_SYSFS 1=""${NVME_TEST_DEVS_SYSFS[1]}"
-	echo "sanity NVME_TEST_DEVS_SYSFS 2=""${NVME_TEST_DEVS_SYSFS[2]}"
-	echo "sanity NVME_TEST_DEVS_SYSFS 3=""${NVME_TEST_DEVS_SYSFS[3]}"
+#	echo "sanity NVME_TEST_DEVS_SYSFS 0=""${NVME_TEST_DEVS_SYSFS[0]}"
+#	echo "sanity NVME_TEST_DEVS_SYSFS 1=""${NVME_TEST_DEVS_SYSFS[1]}"
+#	echo "sanity NVME_TEST_DEVS_SYSFS 2=""${NVME_TEST_DEVS_SYSFS[2]}"
+#	echo "sanity NVME_TEST_DEVS_SYSFS 3=""${NVME_TEST_DEVS_SYSFS[3]}"
 
 	_md_atomics_test "${NVME_TEST_DEVS_SYSFS[0]}" "${NVME_TEST_DEVS_SYSFS[1]}" "${NVME_TEST_DEVS_SYSFS[2]}" "${NVME_TEST_DEVS_SYSFS[3]}"
 

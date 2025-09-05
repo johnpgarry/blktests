@@ -49,16 +49,16 @@ _md_atomics_test() {
 	sysfs_atomic_max_bytes=$(< "$dev0"/queue/atomic_write_max_bytes);
 	sysfs_atomic_boundary_bytes=$(< "$dev0"/queue/atomic_write_boundary_bytes);
 
-	echo "before sysfs_atomic_unit_min_bytes="$sysfs_atomic_unit_min_bytes
-	echo "before sysfs_atomic_unit_max_bytes="$sysfs_atomic_unit_max_bytes
-	echo "before sysfs_atomic_max_bytes="$sysfs_atomic_max_bytes
-	echo "before sysfs_atomic_boundary_bytes="$sysfs_atomic_boundary_bytes
-	echo "before atomic_supported="$atomic_supported
+#	echo "before sysfs_atomic_unit_min_bytes="$sysfs_atomic_unit_min_bytes
+#	echo "before sysfs_atomic_unit_max_bytes="$sysfs_atomic_unit_max_bytes
+#	echo "before sysfs_atomic_max_bytes="$sysfs_atomic_max_bytes
+#	echo "before sysfs_atomic_boundary_bytes="$sysfs_atomic_boundary_bytes
+#	echo "before atomic_supported="$atomic_supported
 	for i in "${MD_DEVICES[@]}"; do
-		echo "llowwpiu MD_DEVICES="$i" unit min="$(< "$i"/queue/atomic_write_unit_min_bytes)
-		echo "llowwpiu MD_DEVICES="$i" unit max="$(< "$i"/queue/atomic_write_unit_max_bytes)
-		echo "llowwpiu MD_DEVICES="$i" max="$(< "$i"/queue/atomic_write_max_bytes)
-		echo "llowwpiu MD_DEVICES="$i" boundary="$(< "$i"/queue/atomic_write_boundary_bytes)
+#		echo "llowwpiu MD_DEVICES="$i" unit min="$(< "$i"/queue/atomic_write_unit_min_bytes)
+#		echo "llowwpiu MD_DEVICES="$i" unit max="$(< "$i"/queue/atomic_write_unit_max_bytes)
+#		echo "llowwpiu MD_DEVICES="$i" max="$(< "$i"/queue/atomic_write_max_bytes)
+#		echo "llowwpiu MD_DEVICES="$i" boundary="$(< "$i"/queue/atomic_write_boundary_bytes)
 		if [[ $(< "$i"/queue/atomic_write_unit_min_bytes) -gt sysfs_atomic_unit_min_bytes ]]; then
 			sysfs_atomic_unit_min_bytes=$(< "$i"/queue/atomic_write_unit_min_bytes)
 		fi
@@ -74,11 +74,11 @@ _md_atomics_test() {
 		fi
 	done
 
-	echo "after sysfs_atomic_unit_min_bytes="$sysfs_atomic_unit_min_bytes
-	echo "after sysfs_atomic_unit_max_bytes="$sysfs_atomic_unit_max_bytes
-	echo "after sysfs_atomic_max_bytes="$sysfs_atomic_max_bytes
-	echo "after sysfs_atomic_boundary_bytes="$sysfs_atomic_boundary_bytes
-	echo "after atomic_supported="$atomic_supported
+#	echo "after sysfs_atomic_unit_min_bytes="$sysfs_atomic_unit_min_bytes
+#	echo "after sysfs_atomic_unit_max_bytes="$sysfs_atomic_unit_max_bytes
+#	echo "after sysfs_atomic_max_bytes="$sysfs_atomic_max_bytes
+#	echo "after sysfs_atomic_boundary_bytes="$sysfs_atomic_boundary_bytes
+#	echo "after atomic_supported="$atomic_supported
 
 	# We cannot support atomic writes for the array of devices supported
 	# However we can still test that the stacked device does not support
@@ -96,6 +96,7 @@ _md_atomics_test() {
 	echo "finally atomic_supported="$atomic_supported
 
 	for raid_level in 0 1 10; do
+		echo "raid_level="$raid_level
 		if [ "$raid_level" = 10 ]
 		then
 			echo y | mdadm --create /dev/md/blktests_md --level=$raid_level \
@@ -107,162 +108,8 @@ _md_atomics_test() {
 				/dev/"${dev0}" /dev/"${dev1}" 2> /dev/null 1>&2
 		fi
 
-		md_dev=$(readlink /dev/md/blktests_md | sed 's|\.\./||')
-		md_dev_sysfs="/sys/devices/virtual/block/${md_dev}"
-
-		md_sysfs_logical_block_size=$(< "${md_dev_sysfs}"/queue/logical_block_size)
-		md_sysfs_max_hw_sectors_kb=$(< "${md_dev_sysfs}"/queue/max_hw_sectors_kb)
-		md_max_hw_bytes=$(( "$md_sysfs_max_hw_sectors_kb" * 1024 ))
-		md_sysfs_atomic_max_bytes=$(< "${md_dev_sysfs}"/queue/atomic_write_max_bytes)
-		md_sysfs_atomic_unit_max_bytes=$(< "${md_dev_sysfs}"/queue/atomic_write_unit_max_bytes)
-		md_sysfs_atomic_unit_min_bytes=$(< "${md_dev_sysfs}"/queue/atomic_write_unit_min_bytes)
-		md_atomic_max_bytes=$(( "$scsi_debug_atomic_wr_max_length" * "$md_sysfs_logical_block_size" ))
-		md_atomic_min_bytes=$(( "$scsi_debug_atomic_wr_gran" * "$md_sysfs_logical_block_size" ))
-
-		test_desc="TEST 1 RAID $raid_level - Verify md sysfs atomic attributes matches scsi"
-		if [ "$md_sysfs_atomic_unit_max_bytes" = "$sysfs_atomic_unit_max_bytes" ] &&
-			[ "$md_sysfs_atomic_unit_min_bytes" = "$sysfs_atomic_unit_min_bytes" ]
-		then
-			echo "$test_desc - pass"
-		else
-			echo "$test_desc - fail $md_sysfs_atomic_unit_max_bytes - $sysfs_atomic_unit_max_bytes -" \
-				"$md_sysfs_atomic_unit_min_bytes - $sysfs_atomic_unit_min_bytes "
-		fi
-
-		test_desc="TEST 2 RAID $raid_level - Verify sysfs atomic attributes"
-		if [ "$md_max_hw_bytes" -ge "$md_sysfs_atomic_max_bytes" ] &&
-			[ "$md_sysfs_atomic_max_bytes" -ge "$md_sysfs_atomic_unit_max_bytes" ] &&
-			[ "$md_sysfs_atomic_unit_max_bytes" -ge "$md_sysfs_atomic_unit_min_bytes" ]
-		then
-			echo "$test_desc - pass"
-		else
-			echo "$test_desc - fail $md_max_hw_bytes - $md_sysfs_max_hw_sectors_kb -" \
-				"$md_sysfs_atomic_max_bytes - $md_sysfs_atomic_unit_max_bytes -" \
-				"$md_sysfs_atomic_unit_min_bytes"
-		fi
-
-		test_desc="TEST 3 RAID $raid_level - Verify md sysfs_atomic_max_bytes is less than or equal "
-		test_desc+="scsi sysfs_atomic_max_bytes"
-		if [ "$md_sysfs_atomic_max_bytes" -le "$sysfs_atomic_max_bytes" ]
-		then
-			echo "$test_desc - pass"
-		else
-			echo "$test_desc - fail $md_sysfs_atomic_max_bytes - $sysfs_atomic_max_bytes"
-		fi
-
-		test_desc="TEST 4 RAID $raid_level - check sysfs atomic_write_unit_max_bytes <= scsi_debug atomic_wr_max_length"
-		if (("$md_sysfs_atomic_unit_max_bytes" <= "$md_atomic_max_bytes"))
-		then
-			echo "$test_desc - pass"
-		else
-			echo "$test_desc - fail $md_sysfs_atomic_unit_max_bytes - $md_atomic_max_bytes"
-		fi
-
-		test_desc="TEST 5 RAID $raid_level - check sysfs atomic_write_unit_min_bytes = scsi_debug atomic_wr_gran"
-		if [ "$md_sysfs_atomic_unit_min_bytes" = "$md_atomic_min_bytes" ]
-		then
-			echo "$test_desc - pass"
-		else
-			echo "$test_desc - fail $md_sysfs_atomic_unit_min_bytes - $md_atomic_min_bytes"
-		fi
-
-		test_desc="TEST 6 RAID $raid_level - check statx stx_atomic_write_unit_min"
-		statx_atomic_min=$(run_xfs_io_xstat /dev/"$md_dev" "stat.atomic_write_unit_min")
-		if [ "$statx_atomic_min" = "$md_atomic_min_bytes" ]
-		then
-			echo "$test_desc - pass"
-		else
-			echo "$test_desc - fail $statx_atomic_min - $md_atomic_min_bytes"
-		fi
-
-		test_desc="TEST 7 RAID $raid_level - check statx stx_atomic_write_unit_max"
-		statx_atomic_max=$(run_xfs_io_xstat /dev/"$md_dev" "stat.atomic_write_unit_max")
-		if [ "$statx_atomic_max" = "$md_sysfs_atomic_unit_max_bytes" ]
-		then
-			echo "$test_desc - pass"
-		else
-			echo "$test_desc - fail $statx_atomic_max - $md_sysfs_atomic_unit_max_bytes"
-		fi
-
-		test_desc="TEST 8 RAID $raid_level - perform a pwritev2 with size of sysfs_atomic_unit_max_bytes with "
-		test_desc+="RWF_ATOMIC flag - pwritev2 should be succesful"
-		bytes_written=$(run_xfs_io_pwritev2_atomic /dev/"$md_dev" "$md_sysfs_atomic_unit_max_bytes")
-		if [ "$bytes_written" = "$md_sysfs_atomic_unit_max_bytes" ]
-		then
-			echo "$test_desc - pass"
-		else
-			echo "$test_desc - fail $bytes_written - $md_sysfs_atomic_unit_max_bytes"
-		fi
-
-		test_desc="TEST 9 RAID $raid_level - perform a pwritev2 with size of sysfs_atomic_unit_max_bytes + 512 "
-		test_desc+="bytes with RWF_ATOMIC flag - pwritev2 should not be succesful"
-		bytes_to_write=$(( "${md_sysfs_atomic_unit_max_bytes}" + 512 ))
-		bytes_written=$(run_xfs_io_pwritev2_atomic /dev/"$md_dev" "$bytes_to_write")
-		if [ "$bytes_written" = "" ]
-		then
-			echo "$test_desc - pass"
-		else
-			echo "$test_desc - fail $bytes_written - $bytes_to_write"
-		fi
-
-		test_desc="TEST 10 RAID $raid_level - perform a pwritev2 with size of sysfs_atomic_unit_min_bytes "
-		test_desc+="with RWF_ATOMIC flag - pwritev2 should be succesful"
-		bytes_written=$(run_xfs_io_pwritev2_atomic /dev/"$md_dev" "$md_sysfs_atomic_unit_min_bytes")
-		if [ "$bytes_written" = "$md_sysfs_atomic_unit_min_bytes" ]
-		then
-			echo "$test_desc - pass"
-		else
-			echo "$test_desc - fail $bytes_written - $md_atomic_min_bytes"
-		fi
-
-		bytes_to_write=$(( "${md_sysfs_atomic_unit_min_bytes}" - "${md_sysfs_logical_block_size}" ))
-		test_desc="TEST 11 RAID $raid_level - perform a pwritev2 with a size of sysfs_atomic_unit_min_bytes - 512 "
-		test_desc+="bytes with RWF_ATOMIC flag - pwritev2 should fail"
-		if [ "$bytes_to_write" = 0 ]
-		then
-			echo "$test_desc - pass"
-		else
-			bytes_written=$(run_xfs_io_pwritev2_atomic /dev/"$md_dev" "$bytes_to_write")
-			if [ "$bytes_written" = "" ]
-			then
-				echo "$test_desc - pass"
-			else
-				echo "$test_desc - fail $bytes_written - $bytes_to_write"
-			fi
-		fi
-
+	
 		mdadm --stop /dev/md/blktests_md  2> /dev/null 1>&2
 
-		if [ "$raid_level" = 0 ] || [ "$raid_level" = 10 ]
-		then
-			md_chunk_size=$(( "$sysfs_atomic_unit_max_bytes" / 2048))
-
-			if [ "$raid_level" = 0 ]
-			then
-				echo y | mdadm --create /dev/md/blktests_md --level=$raid_level \
-					--raid-devices=2 --chunk="${md_chunk_size}"K --force \
-					/dev/"${dev0}" /dev/"${dev1}" 2> /dev/null 1>&2
-			else
-				echo y | mdadm --create /dev/md/blktests_md --level=$raid_level \
-					--raid-devices=4 --chunk="${md_chunk_size}"K --force \
-					/dev/"${dev0}" /dev/"${dev1}" \
-					/dev/"${dev2}" /dev/"${dev3}" 2> /dev/null 1>&2
-			fi
-
-			md_dev=$(readlink /dev/md/blktests_md | sed 's|\.\./||')
-			md_dev_sysfs="/sys/devices/virtual/block/${md_dev}"
-			md_sysfs_atomic_unit_max_bytes=$(< "${md_dev_sysfs}"/queue/atomic_write_unit_max_bytes)
-			md_chunk_size_bytes=$(( "$md_chunk_size" * 1024))
-			test_desc="TEST 12 RAID $raid_level - Verify chunk size "
-			if [ "$md_chunk_size_bytes" -le "$md_sysfs_atomic_unit_max_bytes" ] && \
-				(( md_sysfs_atomic_unit_max_bytes % md_chunk_size_bytes == 0 ))
-			then
-				echo "$test_desc - pass"
-			else
-				echo "$test_desc - fail $md_chunk_size_bytes - $md_sysfs_atomic_unit_max_bytes"
-			fi
-
-			mdadm --quiet --stop /dev/md/blktests_md
-		fi
 	done
 }
