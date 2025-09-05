@@ -11,3 +11,12 @@ group_requires() {
 	_have_program mdadm
 	_have_driver md-mod
 }
+
+
+_md_atomics_test() {
+	dev0=$1
+	dev1=$2
+	dev2=$3
+	dev3=$4
+	echo "running _md_atomics_test dev0="$dev0" dev1="$dev1" dev2="$dev2" dev3="$dev3
+}

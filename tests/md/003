@@ -81,6 +81,7 @@ test() {
 		return 1
 	fi
 
+	_md_atomics_test "${NVME_TEST_DEVS[0]}"  "${NVME_TEST_DEVS[1]}" "${NVME_TEST_DEVS[2]}" "${NVME_TEST_DEVS[3]}"
 
 	echo "Test complete"
 }
