@@ -12,11 +12,17 @@ group_requires() {
 	_have_driver md-mod
 }
 
-
+declare -A MD_DEVICES
 _md_atomics_test() {
-	dev0=$1
-	dev1=$2
-	dev2=$3
-	dev3=$4
-	echo "running _md_atomics_test dev0="$dev0" dev1="$dev1" dev2="$dev2" dev3="$dev3
+	dev1=$1
+	dev2=$2
+	dev3=$3
+	dev4=$4
+	echo "running _md_atomics_test dev1="$dev1" dev2="$dev2" dev3="$dev3" dev4="$dev4
+	unset MD_DEVICES
+	MD_DEVICES=($dev1 $dev2 $dev3 $dev4);
+
+	for i in "${MD_DEVICES[@]}"; do
+		echo "llowwpiu MD_DEVICES="$i
+	done
 }
