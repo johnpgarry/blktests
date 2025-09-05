@@ -86,7 +86,12 @@ test() {
 	echo "sanity NVME_TEST_DEVS 2=""${NVME_TEST_DEVS[2]}"
 	echo "sanity NVME_TEST_DEVS 3=""${NVME_TEST_DEVS[3]}"
 
-	_md_atomics_test "${NVME_TEST_DEVS[0]}" "${NVME_TEST_DEVS[1]}" "${NVME_TEST_DEVS[2]}" "${NVME_TEST_DEVS[3]}"
+	echo "sanity NVME_TEST_DEVS_SYSFS 0=""${NVME_TEST_DEVS_SYSFS[0]}"
+	echo "sanity NVME_TEST_DEVS_SYSFS 1=""${NVME_TEST_DEVS_SYSFS[1]}"
+	echo "sanity NVME_TEST_DEVS_SYSFS 2=""${NVME_TEST_DEVS_SYSFS[2]}"
+	echo "sanity NVME_TEST_DEVS_SYSFS 3=""${NVME_TEST_DEVS_SYSFS[3]}"
+
+	_md_atomics_test "${NVME_TEST_DEVS_SYSFS[0]}" "${NVME_TEST_DEVS_SYSFS[1]}" "${NVME_TEST_DEVS_SYSFS[2]}" "${NVME_TEST_DEVS_SYSFS[3]}"
 
 	echo "Test complete"
 }
