@@ -70,15 +70,17 @@ test() {
 		echo "x $position,${NVME_TEST_DEVS[$i]},${NVME_TEST_DEVS_SYSFS[$i]}"
 		echo "y TEST_DEV_SYSFS="$TEST_DEV_SYSFS
 		echo "z TEST_DEV="$TEST_DEV
-		_require_device_support_atomic_writes
 	done
 
 	echo "testdev_count="$testdev_count
 
-	if [[ $testdev_count -lt 2 ]]; then
-		echo "testdev_count not ge 2"
-		SKIP_REASONS+=("requires at least 2 NVMe devices")
+	if [[ $testdev_count -lt 4 ]]; then
+		echo "testdev_count not ge 4"
+		SKIP_REASONS+=("requires at least 4 NVMe devices")
 		return 1
 	fi
+
+
+	echo "Test complete"
 }
 
