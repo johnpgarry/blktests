@@ -16,11 +16,14 @@ requires() {
 	_nvme_requires
 	_have_program nvme
 	_have_xfs_io_atomic_write
+	_have_driver raid0
+	_have_driver raid1
+	_have_driver raid10
 }
 
 test() {
 	local ns
-	local testdev
+	local testdev_count=0
 	declare -A NVME_TEST_DEVS
 
 	echo "Running test ${TEST_NAME}"
@@ -36,35 +39,42 @@ test() {
 	for i in "${!TEST_DEVS[@]}"; do
 		TEST_DEV="${TEST_DEVS[$i]}"
 		echo "looping a TEST_DEVS and found i="$i" TEST_DEV="$TEST_DEV
-		
-
+		if readlink -f "$i" | grep -q nvme; then
+			echo "looping a good"
+		else
+			echo "looping a bad"
+		fi
 	done
-	for i in "${!TEST_DEV_SYSFS_DIRS[@]}"; do
-		TEST_DEV="${TEST_DEV_SYSFS_DIRS[$i]}"
-		echo "looping b TEST_DEV_SYSFS_DIRS and found i="$i" TEST_DEV="$TEST_DEV
 
+	for i in "${!NVME_TEST_DEVS[@]}"; do
+		NVME_TEST_DEV="${TEST_DEVS[$i]}"
+		echo "looping b NVME_TEST_DEVS and found i="$i" NVME_TEST_DEV="$NVME_TEST_DEV
 	done
+
 	for i in "${!TEST_DEV_PART_SYSFS_DIRS[@]}"; do
 		TEST_DEV="${TEST_DEV_PART_SYSFS_DIRS[$i]}"
-		echo "looping c TEST_DEV_SYSFS_DIRS and found i="$i" TEST_DEV="$TEST_DEV
+		echo "looping c0 TEST_DEV_SYSFS_DIRS and found i="$i" TEST_DEV="$TEST_DEV
 		if readlink -f "$i" | grep -q nvme; then
-		echo "looping c good"
+			echo "looping c1 good i="$i
+			NVME_TEST_DEVS[$testdev_count]=$i;
+			echo "looping c2 good NVME_TEST_DEVS="$NVME_TEST_DEVS[$testdev_count]
+			let testdev_count=testdev_count+1;
 		else
-		echo "looping c bad"
+			echo "looping c3 bad"
 		fi
 	done
-	
-		
-	for ns in "/sys/block/nvme"* ; do
-		# ignore nvme channel block devices
-		#echo "looping and found0a="${ns}
-		#echo "looping and found0b="$ns
-		if ! [[ "${ns}" =~ nvme[0-9]+n[0-9]+ ]]; then
-			continue
-		fi
-		echo "looping and found1a="${ns}
-		echo "looping and found1b="$ns
+
+	for i in "${!NVME_TEST_DEVS[@]}"; do
+		NVME_TEST_DEV="${NVME_TEST_DEVS[$i]}"
+		echo "looping d NVME_TEST_DEVS and found i="$i" NVME_TEST_DEV="$NVME_TEST_DEV
 	done
-	echo "Test complete"
+
+	echo "testdev_count="$testdev_count
+
+	if [[ $testdev_count -lt 4 ]]; then
+		echo "testdev_count not ge 4"
+		SKIP_REASONS+=("require at least 4 NVMe devices")
+		return 1
+	fi
 }
 
