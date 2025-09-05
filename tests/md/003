@@ -61,6 +61,18 @@ test() {
 		echo "looping e NVME_TEST_DEV_SYSFS and found i="$i" NVME_TEST_DEV_SYSFS="$NVME_TEST_DEV_SYSFS
 	done
 
+
+	for ((i = 0; i < ${#NVME_TEST_DEVS[@]}; ++i)); do
+		# bash arrays are 0-indexed
+		position=$(( $i + 1 ))
+		TEST_DEV_SYSFS="${NVME_TEST_DEVS_SYSFS[$i]}"
+		TEST_DEV="${NVME_TEST_DEVS[$i]}"
+		echo "x $position,${NVME_TEST_DEVS[$i]},${NVME_TEST_DEVS_SYSFS[$i]}"
+		echo "y TEST_DEV_SYSFS="$TEST_DEV_SYSFS
+		echo "z TEST_DEV="$TEST_DEV
+		_require_device_support_atomic_writes
+	done
+
 	echo "testdev_count="$testdev_count
 
 	if [[ $testdev_count -lt 2 ]]; then
