@@ -44,10 +44,10 @@ _md_atomics_test() {
 	unset MD_DEVICES
 	MD_DEVICES=($dev0 $dev1 $dev2 $dev3);
 
-	sysfs_atomic_unit_min_bytes=$(< /sys/block/"$dev0"/queue/atomic_write_unit_min_bytes);
-	sysfs_atomic_unit_max_bytes=$(< /sys/block/"$dev0"/queue/atomic_write_unit_max_bytes);
-	sysfs_atomic_max_bytes=$(< /sys/block/"$dev0"/queue/atomic_write_max_bytes);
-	sysfs_atomic_boundary_bytes=$(< /sys/block/"$dev0"/queue/atomic_write_boundary_bytes);
+	expected_atomic_unit_min_bytes=$(< /sys/block/"$dev0"/queue/atomic_write_unit_min_bytes);
+	expected_atomic_unit_max_bytes=$(< /sys/block/"$dev0"/queue/atomic_write_unit_max_bytes);
+	expected_atomic_max_bytes=$(< /sys/block/"$dev0"/queue/atomic_write_max_bytes);
+	expected_atomic_boundary_bytes=$(< /sys/block/"$dev0"/queue/atomic_write_boundary_bytes);
 
 #	echo "before expected_atomic_unit_min_bytes="$expected_atomic_unit_min_bytes
 #	echo "before expected_atomic_unit_max_bytes="$expected_atomic_unit_max_bytes
@@ -162,28 +162,28 @@ _md_atomics_test() {
 		fi
 
 		test_desc="TEST 4 RAID $raid_level - check sysfs atomic_write_unit_max_bytes <= debug atomic_wr_max_length"
-		if (("$md_sysfs_atomic_unit_max_bytes" <= "$md_atomic_max_bytes"))
+		if [ "$md_sysfs_atomic_unit_max_bytes" -le "$expected_atomic_unit_max_bytes" ]
 		then
 			echo "$test_desc - pass"
 		else
-			echo "$test_desc - fail $md_sysfs_atomic_unit_max_bytes - $md_atomic_max_bytes"
+			echo "$test_desc - fail $md_sysfs_atomic_unit_max_bytes - $expected_atomic_unit_max_bytes"
 		fi
 
 		test_desc="TEST 5 RAID $raid_level - check sysfs atomic_write_unit_min_bytes = debug atomic_wr_gran"
-		if [ "$md_sysfs_atomic_unit_min_bytes" = "$md_atomic_min_bytes" ]
+		if [ "$md_sysfs_atomic_unit_min_bytes" = "$expected_atomic_unit_min_bytes" ]
 		then
 			echo "$test_desc - pass"
 		else
-			echo "$test_desc - fail $md_sysfs_atomic_unit_min_bytes - $md_atomic_min_bytes"
+			echo "$test_desc - fail $md_sysfs_atomic_unit_min_bytes - $expected_atomic_unit_min_bytes"
 		fi
 
 		test_desc="TEST 6 RAID $raid_level - check statx stx_atomic_write_unit_min"
 		statx_atomic_min=$(run_xfs_io_xstat /dev/"$md_dev" "stat.atomic_write_unit_min")
-		if [ "$statx_atomic_min" = "$md_atomic_min_bytes" ]
+		if [ "$statx_atomic_min" = "$md_sysfs_atomic_unit_min_bytes" ]
 		then
 			echo "$test_desc - pass"
 		else
-			echo "$test_desc - fail $statx_atomic_min - $md_atomic_min_bytes"
+			echo "$test_desc - fail $statx_atomic_min - $md_sysfs_atomic_unit_min_bytes"
 		fi
 
 		test_desc="TEST 7 RAID $raid_level - check statx stx_atomic_write_unit_max"
