@@ -35,6 +35,7 @@ _md_atomics_test() {
 	local expected_atomic_max_bytes
 	local expected_atomic_boundary_bytes
 	local atomic_supported=1
+	local md_chunk_size
 
 	dev0=$1
 	dev1=$2
@@ -243,38 +244,48 @@ _md_atomics_test() {
 		fi
 		mdadm --stop /dev/md/blktests_md  2> /dev/null 1>&2
 
-
 		if [ "$raid_level" = 0 ] || [ "$raid_level" = 10 ]
 		then
-			md_chunk_size=$(( "$expected_atomic_unit_max_bytes" / 2048))
-			echo "chunky md_chunk_size="$md_chunk_size
+			for chunk_multiple in `seq 2 8`
+			do
+				base_value=$(( "$expected_atomic_unit_max_bytes" / 4))
+				if [ "$base_value" -lt "$expected_atomic_unit_min_bytes" ]
+				then
+					base_value=$expected_atomic_unit_min_bytes
+				fi
 
-			if [ "$raid_level" = 0 ]
-			then
-				echo y | mdadm --create /dev/md/blktests_md --level=$raid_level \
-					--raid-devices=2 --chunk="${md_chunk_size}"K --force \
-					/dev/"${dev0}" /dev/"${dev1}" 2> /dev/null 1>&2
-			else
-				echo y | mdadm --create /dev/md/blktests_md --level=$raid_level \
-					--raid-devices=4 --chunk="${md_chunk_size}"K --force \
-					/dev/"${dev0}" /dev/"${dev1}" \
-					/dev/"${dev2}" /dev/"${dev3}" 2> /dev/null 1>&2
-			fi
+				echo "chunky1 md_chunk_size_bytes="$md_chunk_size_bytes" chunk_multiple="$chunk_multiple" base_value="$base_value
+				md_chunk_size_bytes=$(( "$expected_atomic_unit_max_bytes" * "$chunk_multiple"))
+				echo "chunky2 md_chunk_size_bytes="$md_chunk_size_bytes" chunk_multiple="$chunk_multiple
+				md_chunk_size=$(( "$expected_atomic_unit_max_bytes" / 1024))
 
-			md_dev=$(readlink /dev/md/blktests_md | sed 's|\.\./||')
-			md_dev_sysfs="/sys/devices/virtual/block/${md_dev}"
-			md_sysfs_atomic_unit_max_bytes=$(< "${md_dev_sysfs}"/queue/atomic_write_unit_max_bytes)
-			md_chunk_size_bytes=$(( "$md_chunk_size" * 1024))
-			test_desc="TEST 12 RAID $raid_level - Verify chunk size "
-			if [ "$md_chunk_size_bytes" -le "$md_sysfs_atomic_unit_max_bytes" ] && \
-				(( md_sysfs_atomic_unit_max_bytes % md_chunk_size_bytes == 0 ))
-			then
-				echo "$test_desc - pass"
-			else
-				echo "$test_desc - fail $md_chunk_size_bytes - $md_sysfs_atomic_unit_max_bytes"
-			fi
+				if [ "$raid_level" = 0 ]
+				then
+					echo y | mdadm --create /dev/md/blktests_md --level=$raid_level \
+						--raid-devices=2 --chunk="${md_chunk_size}"K --force \
+						/dev/"${dev0}" /dev/"${dev1}" 2> /dev/null 1>&2
+				else
+					echo y | mdadm --create /dev/md/blktests_md --level=$raid_level \
+						--raid-devices=4 --chunk="${md_chunk_size}"K --force \
+						/dev/"${dev0}" /dev/"${dev1}" \
+						/dev/"${dev2}" /dev/"${dev3}" 2> /dev/null 1>&2
+				fi
 
-			mdadm --quiet --stop /dev/md/blktests_md
+				md_dev=$(readlink /dev/md/blktests_md | sed 's|\.\./||')
+				md_dev_sysfs="/sys/devices/virtual/block/${md_dev}"
+				md_sysfs_atomic_unit_max_bytes=$(< "${md_dev_sysfs}"/queue/atomic_write_unit_max_bytes)
+				test_desc="TEST 12 RAID $raid_level - Verify chunk size "
+				echo "chunky3 md_chunk_size_bytes="$md_chunk_size_bytes" chunk_multiple="$chunk_multiple" md_chunk_size_bytes="$md_chunk_size_bytes "md_sysfs_atomic_unit_max_bytes="$md_sysfs_atomic_unit_max_bytes
+				if [ "$md_chunk_size_bytes" -le "$md_sysfs_atomic_unit_max_bytes" ] && \
+					(( md_sysfs_atomic_unit_max_bytes % md_chunk_size_bytes == 0 ))
+				then
+					echo "$test_desc - pass"
+				else
+					echo "$test_desc - fail $md_chunk_size_bytes - $md_sysfs_atomic_unit_max_bytes chunk_multiple="$chunk_multiple
+				fi
+
+				mdadm --quiet --stop /dev/md/blktests_md
+			done
 		fi
 	done
 }
