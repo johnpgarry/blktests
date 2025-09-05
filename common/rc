@@ -291,9 +291,13 @@ _test_dev_is_rotational() {
 }
 
 _require_test_dev_sysfs() {
+	echo "_require_test_dev_sysfs() 1 TEST_DEV_SYSFS="$TEST_DEV_SYSFS
+	echo "_require_test_dev_sysfs() 2 $1="$1
+	echo "_require_test_dev_sysfs() 3 $TEST_DEV="$TEST_DEV
 	if [[ ! -e "${TEST_DEV_SYSFS}/$1" ]]; then
-		SKIP_REASONS+=("${TEST_DEV} does not have sysfs attribute $1")
-		return 1
+		echo "_require_test_dev_sysfs does not have"
+	#	SKIP_REASONS+=("${TEST_DEV} does not have sysfs attribute $1")
+	#	return 1
 	fi
 	return 0
 }
@@ -319,8 +323,11 @@ _require_test_dev_can_discard() {
 }
 
 _require_device_support_atomic_writes() {
+	echo "_require_device_support_atomic_writes TEST_DEV_SYSFS="$TEST_DEV_SYSFS
+	echo "_require_device_support_atomic_writes TEST_DEV="$TEST_DEV
 	_require_test_dev_sysfs queue/atomic_write_max_bytes
 	if (( $(< "${TEST_DEV_SYSFS}"/queue/atomic_write_max_bytes) == 0 )); then
+		echo "_require_device_support_atomic_writes does not support atomic writes"
 		SKIP_REASONS+=("${TEST_DEV} does not support atomic write")
 		return 1
 	fi

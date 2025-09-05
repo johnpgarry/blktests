@@ -30,9 +30,11 @@ _md_atomics_test() {
 	local test_desc
 	local md_dev
 	local md_dev_sysfs
-	local sysfs_atomic_max_bytes
 	local sysfs_atomic_unit_min_bytes
 	local sysfs_atomic_unit_max_bytes
+	local sysfs_atomic_max_bytes
+	local sysfs_atomic_boundary_bytes
+	local atomic_supported=1
 
 	dev0=$1
 	dev1=$2
@@ -42,9 +44,50 @@ _md_atomics_test() {
 	unset MD_DEVICES
 	MD_DEVICES=($dev0 $dev1 $dev2 $dev3);
 
+	sysfs_atomic_unit_min_bytes=$(< "$dev0"/queue/atomic_write_unit_min_bytes);
+	sysfs_atomic_unit_max_bytes=$(< "$dev0"/queue/atomic_write_unit_max_bytes);
+	sysfs_atomic_max_bytes=$(< "$dev0"/queue/atomic_write_max_bytes);
+	sysfs_atomic_boundary_bytes=$(< "$dev0"/queue/atomic_write_boundary_bytes);
+
+	echo "before sysfs_atomic_unit_min_bytes="$sysfs_atomic_unit_min_bytes
+	echo "before sysfs_atomic_unit_max_bytes="$sysfs_atomic_unit_max_bytes
+	echo "before sysfs_atomic_max_bytes="$sysfs_atomic_max_bytes
+	echo "before sysfs_atomic_boundary_bytes="$sysfs_atomic_boundary_bytes
+	echo "before atomic_supported="$atomic_supported
 	for i in "${MD_DEVICES[@]}"; do
 		echo "llowwpiu MD_DEVICES="$i" unit min="$(< "$i"/queue/atomic_write_unit_min_bytes)
 		echo "llowwpiu MD_DEVICES="$i" unit max="$(< "$i"/queue/atomic_write_unit_max_bytes)
 		echo "llowwpiu MD_DEVICES="$i" max="$(< "$i"/queue/atomic_write_max_bytes)
+		echo "llowwpiu MD_DEVICES="$i" boundary="$(< "$i"/queue/atomic_write_boundary_bytes)
+		if [[ $(< "$i"/queue/atomic_write_unit_min_bytes) -gt sysfs_atomic_unit_min_bytes ]]; then
+			sysfs_atomic_unit_min_bytes=$(< "$i"/queue/atomic_write_unit_min_bytes)
+		fi
+		if [[ $(< "$i"/queue/atomic_write_unit_max_bytes) -lt sysfs_atomic_unit_max_bytes ]]; then
+			sysfs_atomic_unit_max_bytes=$(< "$i"/queue/atomic_write_unit_max_bytes)
+		fi
+		if [[ $(< "$i"/queue/atomic_write_max_bytes) -lt sysfs_atomic_max_bytes ]]; then
+			sysfs_atomic_max_bytes=$(< "$i"/queue/atomic_write_max_bytes)
+		fi
+		if [[ $(< "$i"/queue/atomic_write_boundary_bytes) -ne sysfs_atomic_boundary_bytes ]]; then
+			let atomic_supported=0;
+		fi
 	done
+
+	echo "after sysfs_atomic_unit_min_bytes="$sysfs_atomic_unit_min_bytes
+	echo "after sysfs_atomic_unit_max_bytes="$sysfs_atomic_unit_max_bytes
+	echo "after sysfs_atomic_max_bytes="$sysfs_atomic_max_bytes
+	echo "after sysfs_atomic_boundary_bytes="$sysfs_atomic_boundary_bytes
+	echo "after atomic_supported="$atomic_supported
+
+	if [[ atomic_supported -eq 0 ]]; then
+		let sysfs_atomic_unit_min_bytes=0;
+		let sysfs_atomic_unit_max_bytes=0;
+		let sysfs_atomic_max_bytes=0;
+		let sysfs_atomic_boundary_bytes=0;
+	fi
+	echo "finally sysfs_atomic_unit_min_bytes="$sysfs_atomic_unit_min_bytes
+	echo "finally sysfs_atomic_unit_max_bytes="$sysfs_atomic_unit_max_bytes
+	echo "finally sysfs_atomic_max_bytes="$sysfs_atomic_max_bytes
+	echo "finally sysfs_atomic_boundary_bytes="$sysfs_atomic_boundary_bytes
+	echo "finally atomic_supported="$atomic_supported
 }
