@@ -25,6 +25,7 @@ test() {
 	local ns
 	local testdev_count=0
 	declare -A NVME_TEST_DEVS
+	declare -A NVME_TEST_DEVS_SYSFS
 
 	echo "Running test ${TEST_NAME}"
 
@@ -36,31 +37,18 @@ test() {
 	echo "nvme_1="$nvme_1
 	echo "nvme_2="$nvme_2
 
-	for i in "${!TEST_DEVS[@]}"; do
-		TEST_DEV="${TEST_DEVS[$i]}"
-		echo "looping a TEST_DEVS and found i="$i" TEST_DEV="$TEST_DEV
-		if readlink -f "$i" | grep -q nvme; then
-			echo "looping a good"
-		else
-			echo "looping a bad"
-		fi
-	done
-
-	for i in "${!NVME_TEST_DEVS[@]}"; do
-		NVME_TEST_DEV="${TEST_DEVS[$i]}"
-		echo "looping b NVME_TEST_DEVS and found i="$i" NVME_TEST_DEV="$NVME_TEST_DEV
-	done
-
-	for i in "${!TEST_DEV_PART_SYSFS_DIRS[@]}"; do
-		TEST_DEV="${TEST_DEV_PART_SYSFS_DIRS[$i]}"
-		echo "looping c0 TEST_DEV_SYSFS_DIRS and found i="$i" TEST_DEV="$TEST_DEV
-		if readlink -f "$i" | grep -q nvme; then
-			echo "looping c1 good i="$i
-			NVME_TEST_DEVS[$testdev_count]=$i;
-			echo "looping c2 good NVME_TEST_DEVS="$NVME_TEST_DEVS[$testdev_count]
+	for i in "${!TEST_DEV_SYSFS_DIRS[@]}"; do
+		TEST_DEV=${TEST_DEV_SYSFS_DIRS[$i]}
+		echo "looping b0 TEST_DEV_SYSFS_DIRS and found i="$i" TEST_DEV="$TEST_DEV
+		if readlink -f "$TEST_DEV" | grep -q nvme; then
+			echo "looping b1 good i="$i" TEST_DEV="$TEST_DEV
+			NVME_TEST_DEVS["$testdev_count"]="$i";
+			NVME_TEST_DEVS_SYSFS["$testdev_count"]="$TEST_DEV";
+			echo "looping b2b good NVME_TEST_DEVS="$NVME_TEST_DEVS[$testdev_count]" testdev_count="$testdev_count
+			echo "looping b2c good NVME_TEST_DEVS_SYSFS="$NVME_TEST_DEVS_SYSFS[$testdev_count]" testdev_count="$testdev_count
 			let testdev_count=testdev_count+1;
 		else
-			echo "looping c3 bad"
+			echo "looping b3 bad "$i
 		fi
 	done
 
@@ -68,12 +56,16 @@ test() {
 		NVME_TEST_DEV="${NVME_TEST_DEVS[$i]}"
 		echo "looping d NVME_TEST_DEVS and found i="$i" NVME_TEST_DEV="$NVME_TEST_DEV
 	done
+	for i in "${!NVME_TEST_DEVS_SYSFS[@]}"; do
+		NVME_TEST_DEV_SYSFS="${NVME_TEST_DEVS_SYSFS[$i]}"
+		echo "looping e NVME_TEST_DEV_SYSFS and found i="$i" NVME_TEST_DEV_SYSFS="$NVME_TEST_DEV_SYSFS
+	done
 
 	echo "testdev_count="$testdev_count
 
-	if [[ $testdev_count -lt 4 ]]; then
-		echo "testdev_count not ge 4"
-		SKIP_REASONS+=("require at least 4 NVMe devices")
+	if [[ $testdev_count -lt 2 ]]; then
+		echo "testdev_count not ge 2"
+		SKIP_REASONS+=("requires at least 2 NVMe devices")
 		return 1
 	fi
 }
