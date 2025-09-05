@@ -1,7 +1,7 @@
 Running md/002
-TEST 1 RAID 0 - Verify md sysfs atomic attributes matches scsi - pass
+TEST 1 RAID 0 - Verify md sysfs atomic attributes matches - pass
 TEST 2 RAID 0 - Verify sysfs atomic attributes - pass
-TEST 3 RAID 0 - Verify md sysfs_atomic_max_bytes is less than or equal scsi sysfs_atomic_max_bytes - pass
+TEST 3 RAID 0 - Verify md sysfs_atomic_max_bytes is less than or equal sysfs_atomic_max_bytes - pass
 TEST 4 RAID 0 - check sysfs atomic_write_unit_max_bytes <= scsi_debug atomic_wr_max_length - pass
 TEST 5 RAID 0 - check sysfs atomic_write_unit_min_bytes = scsi_debug atomic_wr_gran - pass
 TEST 6 RAID 0 - check statx stx_atomic_write_unit_min - pass
