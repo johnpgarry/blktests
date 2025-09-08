@@ -56,10 +56,10 @@ _md_atomics_test() {
 #	echo "before expected_atomic_boundary_bytes="$expected_atomic_boundary_bytes
 #	echo "before atomic_supported="$atomic_supported
 	for i in "${MD_DEVICES[@]}"; do
-#		echo "llowwpiu MD_DEVICES="$i" unit min="$(< "$i"/queue/atomic_write_unit_min_bytes)
-#		echo "llowwpiu MD_DEVICES="$i" unit max="$(< "$i"/queue/atomic_write_unit_max_bytes)
-#		echo "llowwpiu MD_DEVICES="$i" max="$(< "$i"/queue/atomic_write_max_bytes)
-#		echo "llowwpiu MD_DEVICES="$i" boundary="$(< "$i"/queue/atomic_write_boundary_bytes)
+		echo "llowwpiu MD_DEVICES="$i" unit min="$(< "$i"/queue/atomic_write_unit_min_bytes)
+		echo "llowwpiu MD_DEVICES="$i" unit max="$(< "$i"/queue/atomic_write_unit_max_bytes)
+		echo "llowwpiu MD_DEVICES="$i" max="$(< "$i"/queue/atomic_write_max_bytes)
+		echo "llowwpiu MD_DEVICES="$i" boundary="$(< "$i"/queue/atomic_write_boundary_bytes)
 		if [[ $(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes) -gt expected_atomic_unit_min_bytes ]]; then
 			expected_atomic_unit_min_bytes=$(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes)
 		fi
@@ -282,13 +282,13 @@ _md_atomics_test() {
 				md_dev_sysfs="/sys/devices/virtual/block/${md_dev}"
 				md_sysfs_atomic_unit_max_bytes=$(< "${md_dev_sysfs}"/queue/atomic_write_unit_max_bytes)
 				test_desc="TEST 12 RAID $raid_level - Verify chunk size "
-				echo "chunky3 md_chunk_size_bytes="$md_chunk_size_bytes" chunk_multiple="$chunk_multiple" md_sysfs_atomic_unit_max_bytes="$md_sysfs_atomic_unit_max_bytes
-				if [ "$md_chunk_size_bytes" -le "$md_sysfs_atomic_unit_max_bytes" ] && \
-					(( md_sysfs_atomic_unit_max_bytes % md_chunk_size_bytes == 0 ))
+				echo "chunky3x md_chunk_size_bytes="$md_chunk_size_bytes" chunk_multiple="$chunk_multiple" md_sysfs_atomic_unit_max_bytes="$md_sysfs_atomic_unit_max_bytes
+				if [ "$md_chunk_size_bytes" -ge "$md_sysfs_atomic_unit_max_bytes" ] && \
+					(( md_chunk_size_bytes % md_sysfs_atomic_unit_max_bytes == 0 ))
 				then
 					echo "$test_desc - pass"
 				else
-					echo "$test_desc - fail $md_chunk_size_bytes - $md_sysfs_atomic_unit_max_bytes chunk_multiple="$chunk_multiple
+					echo $test_desc" - fail md_chunk_size_bytes="$md_chunk_size_bytes" md_sysfs_atomic_unit_max_bytes="$md_sysfs_atomic_unit_max_bytes" chunk_multiple="$chunk_multiple
 				fi
 
 				mdadm --quiet --stop /dev/md/blktests_md
