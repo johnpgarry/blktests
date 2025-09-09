@@ -56,10 +56,10 @@ _md_atomics_test() {
 #	echo "before expected_atomic_boundary_bytes="$expected_atomic_boundary_bytes
 #	echo "before atomic_supported="$atomic_supported
 	for i in "${MD_DEVICES[@]}"; do
-		echo "llowwpiu MD_DEVICES="$i" unit min="$(< "$i"/queue/atomic_write_unit_min_bytes)
-		echo "llowwpiu MD_DEVICES="$i" unit max="$(< "$i"/queue/atomic_write_unit_max_bytes)
-		echo "llowwpiu MD_DEVICES="$i" max="$(< "$i"/queue/atomic_write_max_bytes)
-		echo "llowwpiu MD_DEVICES="$i" boundary="$(< "$i"/queue/atomic_write_boundary_bytes)
+		echo "llowwpiu MD_DEVICES="$i" unit min="$(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes)
+		echo "llowwpiu MD_DEVICES="$i" unit max="$(< /sys/block/"$i"/queue/atomic_write_unit_max_bytes)
+		echo "llowwpiu MD_DEVICES="$i" max="$(< /sys/block/"$i"/queue/atomic_write_max_bytes)
+		echo "llowwpiu MD_DEVICES="$i" boundary="$(< /sys/block/"$i"/queue/atomic_write_boundary_bytes)
 		if [[ $(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes) -gt expected_atomic_unit_min_bytes ]]; then
 			expected_atomic_unit_min_bytes=$(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes)
 		fi
@@ -126,6 +126,8 @@ _md_atomics_test() {
 #		echo "md_sysfs_atomic_unit_max_bytes="$md_sysfs_atomic_unit_max_bytes
 		md_sysfs_atomic_unit_min_bytes=$(< "${md_dev_sysfs}"/queue/atomic_write_unit_min_bytes)
 #		echo "md_sysfs_atomic_unit_min_bytes="$md_sysfs_atomic_unit_min_bytes
+		md_sysfs_atomic_boundary_bytes=$(< "${md_dev_sysfs}"/queue/atomic_write_boundary_bytes)
+		echo "md_sysfs_atomic_boundary_bytes="$md_sysfs_atomic_boundary_bytes
 #		md_atomic_max_bytes=$(( "$scsi_debug_atomic_wr_max_length" * "$md_sysfs_logical_block_size" ))
 #		echo "md_atomic_max_bytes="$md_atomic_max_bytes
 #		md_atomic_min_bytes=$(( "$scsi_debug_atomic_wr_gran" * "$md_sysfs_logical_block_size" ))
@@ -137,7 +139,7 @@ _md_atomics_test() {
 		then
 			echo "$test_desc - pass"
 		else
-			echo "$test_desc - fail $md_sysfs_atomic_unit_max_bytes - $expected_atomic_unit_max_bytes -" \
+			echo "$test_desc - fail $md_sysfs_atomic_unit_max_bytes - $expected_atomic_unit_max_bytes and " \
 				"$md_sysfs_atomic_unit_min_bytes - $expected_atomic_unit_min_bytes "
 		fi
 
@@ -170,7 +172,7 @@ _md_atomics_test() {
 			echo "$test_desc - fail $md_sysfs_atomic_unit_max_bytes - $expected_atomic_unit_max_bytes"
 		fi
 
-		test_desc="TEST 5 RAID $raid_level - check sysfs atomic_write_unit_min_bytes = debug atomic_wr_gran"
+		test_desc="TEST 5 RAID $raid_level - check sysfs atomic_write_unit_min_bytes = expected atomic_write_unit_min_bytes"
 		if [ "$md_sysfs_atomic_unit_min_bytes" = "$expected_atomic_unit_min_bytes" ]
 		then
 			echo "$test_desc - pass"
@@ -292,6 +294,10 @@ _md_atomics_test() {
 				fi
 
 				mdadm --quiet --stop /dev/md/blktests_md
+				mdadm --zero-superblock /dev/"${dev0}"
+				mdadm --zero-superblock /dev/"${dev1}"
+				mdadm --zero-superblock /dev/"${dev2}"
+				mdadm --zero-superblock /dev/"${dev3}"
 			done
 		fi
 	done

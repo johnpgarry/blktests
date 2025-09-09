@@ -66,12 +66,17 @@ test() {
 	scsi_2="${SCSI_DEBUG_DEVICES[2]}"
 	scsi_3="${SCSI_DEBUG_DEVICES[3]}"
 
+	_md_atomics_test "${SCSI_DEBUG_DEVICES[0]}" "${SCSI_DEBUG_DEVICES[1]}" "${SCSI_DEBUG_DEVICES[2]}" "${SCSI_DEBUG_DEVICES[3]}"
+
+	_exit_scsi_debug
+	return 1
 	scsi_dev_sysfs="/sys/block/${scsi_0}"
 	scsi_sysfs_atomic_max_bytes=$(< "${scsi_dev_sysfs}"/queue/atomic_write_max_bytes)
 	scsi_sysfs_atomic_unit_max_bytes=$(< "${scsi_dev_sysfs}"/queue/atomic_write_unit_max_bytes)
 	scsi_sysfs_atomic_unit_min_bytes=$(< "${scsi_dev_sysfs}"/queue/atomic_write_unit_min_bytes)
 	scsi_debug_atomic_wr_max_length=$(< /sys/module/scsi_debug/parameters/atomic_wr_max_length)
 	scsi_debug_atomic_wr_gran=$(< /sys/module/scsi_debug/parameters/atomic_wr_gran)
+
 
 	for raid_level in 0 1 10; do
 		if [ "$raid_level" = 10 ]
