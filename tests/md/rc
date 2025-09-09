@@ -32,7 +32,7 @@ _max_pow_of_two_factor() {
 	echo "$retval"
 }
 
-_md_atomics_boundaries_max() {
+_md_atomics_boundaries_unit_max() {
 	boundary=$1
 	chunk=$2
 	retval=""
@@ -41,6 +41,21 @@ _md_atomics_boundaries_max() {
 	then
 		retval=$(_max_pow_of_two_factor $chunk)
 		echo "$retval"
+		return 1
+	fi
+	retval=123456
+
+	echo "$retval"
+}
+
+_md_atomics_boundaries_max() {
+	boundary=$1
+	chunk=$2
+	retval=""
+
+	if [ "$boundary" -eq 0 ]
+	then
+		echo "$chunk"
 		return 1
 	fi
 	retval=123456
@@ -161,13 +176,14 @@ _md_atomics_test() {
 					 --chunk="${md_chunk_size_kb}"K \
 					--raid-devices=4 --force /dev/"${dev0}" /dev/"${dev1}" \
 					/dev/"${dev2}" /dev/"${dev3}" 2> /dev/null 1>&2
+				atomics_boundaries_unit_max=$(_md_atomics_boundaries_unit_max $raw_atomic_write_boundary $md_chunk_size)
 				atomics_boundaries_max=$(_md_atomics_boundaries_max $raw_atomic_write_boundary $md_chunk_size)
-				echo "grace1 raw boundary="$raw_atomic_write_boundary" md_chunk_size="$md_chunk_size" atomics_boundaries_max="$atomics_boundaries_max
+				echo "grace1 raw boundary="$raw_atomic_write_boundary" md_chunk_size="$md_chunk_size" atomics_boundaries_unit_max="$atomics_boundaries_unit_max" atomics_boundaries_max="$atomics_boundaries_max
 				echo "grace2 before expected_atomic_write_unit_min="$expected_atomic_write_unit_min
 				echo "grace3 before expected_atomic_write_unit_max="$expected_atomic_write_unit_max
 				echo "grace4 before expected_atomic_write_max="$expected_atomic_write_max
-				expected_atomic_write_unit_min=$(_min $expected_atomic_write_unit_min $atomics_boundaries_max)
-				expected_atomic_write_unit_max=$(_min $expected_atomic_write_unit_max $atomics_boundaries_max)
+				expected_atomic_write_unit_min=$(_min $expected_atomic_write_unit_min $atomics_boundaries_unit_max)
+				expected_atomic_write_unit_max=$(_min $expected_atomic_write_unit_max $atomics_boundaries_unit_max)
 				expected_atomic_write_max=$(_min $expected_atomic_write_max $atomics_boundaries_max)
 
 				echo "grace2 after expected_atomic_write_unit_min="$expected_atomic_write_unit_min
@@ -221,7 +237,7 @@ _md_atomics_test() {
 
 			test_desc="TEST 3 RAID $raid_level - Verify md sysfs_atomic_write_max is less than or equal "
 			test_desc+="sysfs_atomic_write_max"
-			if [ "$sysfs_atomic_write_max" -le "$expected_atomic_write_max" ]
+			if [ "$sysfs_atomic_write_max" -eq "$expected_atomic_write_max" ]
 			then
 				echo "$test_desc - pass"
 			else
