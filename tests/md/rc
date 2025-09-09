@@ -128,6 +128,13 @@ _md_atomics_test() {
 					--raid-devices=4 --force /dev/"${dev0}" /dev/"${dev1}" \
 					/dev/"${dev2}" /dev/"${dev3}" 2> /dev/null 1>&2
 				let md_expected_atomic_write_boundary=$expected_atomic_write_boundary
+				if [ "$md_chunk_size" -ge "$expected_atomic_write_max" ]
+				then
+				let md_expected_atomic_write_unit_min=$expected_atomic_write_unit_min
+				let md_expected_atomic_write_unit_max=$expected_atomic_write_unit_max
+				let md_expected_atomic_write_max=$expected_atomic_write_max
+				let md_expected_atomic_write_boundary=$expected_atomic_write_boundary
+				fi
 			else
 				echo y | mdadm --create /dev/md/blktests_md --level=$raid_level \
 					--raid-devices=4 --force /dev/"${dev0}" /dev/"${dev1}" \
@@ -159,7 +166,8 @@ _md_atomics_test() {
 				echo "$test_desc - fail sysfs_atomic_write_unit_min="$sysfs_atomic_write_unit_min \
 					"sysfs_atomic_write_unit_max="$sysfs_atomic_write_unit_max \
 					"md_expected_atomic_write_unit_min="$md_expected_atomic_write_unit_min \
-					"md_expected_atomic_write_unit_max="$md_expected_atomic_write_unit_max
+					"md_expected_atomic_write_unit_max="$md_expected_atomic_write_unit_max \
+					"md_chunk_size="$md_chunk_size
 			fi
 
 			test_desc="TEST 2 RAID $raid_level - Verify sysfs atomic attributes"
@@ -172,7 +180,8 @@ _md_atomics_test() {
 				echo "$test_desc - fail $md_sysfs_max_hw="$md_sysfs_max_hw \
 					"sysfs_atomic_write_max="$sysfs_atomic_write_max \
 					"sysfs_atomic_write_unit_min="$sysfs_atomic_write_unit_min \
-					"sysfs_atomic_write_unit_max="$sysfs_atomic_write_unit_max
+					"sysfs_atomic_write_unit_max="$sysfs_atomic_write_unit_max \
+					"md_chunk_size="$md_chunk_size
 			fi
 
 			test_desc="TEST 3 RAID $raid_level - Verify md sysfs_atomic_write_max is less than or equal "
@@ -182,7 +191,8 @@ _md_atomics_test() {
 				echo "$test_desc - pass"
 			else
 				echo "$test_desc - fail sysfs_atomic_write_max="$sysfs_atomic_write_max \
-					"expected_atomic_write_max="$expected_atomic_write_max
+					"expected_atomic_write_max="$expected_atomic_write_max \
+					"md_chunk_size="$md_chunk_size
 			fi
 
 			test_desc="TEST 4 RAID $raid_level - check sysfs atomic_write_unit_max_bytes <=  expected_atomic_write_unit_max"
@@ -191,7 +201,8 @@ _md_atomics_test() {
 				echo "$test_desc - pass"
 			else
 				echo "$test_desc - fail sysfs_atomic_write_unit_max="$sysfs_atomic_write_unit_max \
-					"expected_atomic_write_unit_max="$expected_atomic_write_unit_max
+					"expected_atomic_write_unit_max="$expected_atomic_write_unit_max \
+					"md_chunk_size="$md_chunk_size
 			fi
 
 			test_desc="TEST 5 RAID $raid_level - check sysfs atomic_write_unit_min_bytes = expected atomic_write_unit_min_bytes"
@@ -200,7 +211,8 @@ _md_atomics_test() {
 				echo "$test_desc - pass"
 			else
 				echo "$test_desc - fail sysfs_atomic_write_unit_min="$sysfs_atomic_write_unit_min \
-					"expected_atomic_write_unit_min="$expected_atomic_write_unit_min
+					"expected_atomic_write_unit_min="$expected_atomic_write_unit_min \
+					"md_chunk_size="$md_chunk_size
 			fi
 
 			test_desc="TEST 6 RAID $raid_level - check statx stx_atomic_write_unit_min"
@@ -210,7 +222,8 @@ _md_atomics_test() {
 				echo "$test_desc - pass"
 			else
 				echo "$test_desc - fail statx_atomic_write_unit_min="$statx_atomic_write_unit_min \
-					"sysfs_atomic_write_unit_min="$sysfs_atomic_write_unit_min
+					"sysfs_atomic_write_unit_min="$sysfs_atomic_write_unit_min \
+					"md_chunk_size="$md_chunk_size
 			fi
 
 			test_desc="TEST 7 RAID $raid_level - check statx stx_atomic_write_unit_max"
@@ -220,7 +233,8 @@ _md_atomics_test() {
 				echo "$test_desc - pass"
 			else
 				echo "$test_desc - fail statx_atomic_write_unit_max="$statx_atomic_write_unit_max \
-					"sysfs_atomic_write_unit_max="$sysfs_atomic_write_unit_max
+					"sysfs_atomic_write_unit_max="$sysfs_atomic_write_unit_max \
+					"md_chunk_size="$md_chunk_size
 			fi
 
 			test_desc="TEST 8 RAID $raid_level - perform a pwritev2 with size of sysfs_atomic_unit_max_bytes with "
@@ -231,7 +245,8 @@ _md_atomics_test() {
 				echo "$test_desc - pass"
 			else
 				echo "$test_desc - fail bytes_written="$bytes_written \
-					"sysfs_atomic_write_unit_max="$sysfs_atomic_write_unit_max
+					"sysfs_atomic_write_unit_max="$sysfs_atomic_write_unit_max \
+					"md_chunk_size="$md_chunk_size
 			fi
 
 			test_desc="TEST 9 RAID $raid_level - perform a pwritev2 with size of sysfs_atomic_unit_max_bytes + 512 "
@@ -244,7 +259,8 @@ _md_atomics_test() {
 			else
 				echo "$test_desc - fail bytes_written="$bytes_written \
 					"bytes_to_write="$bytes_to_write \
-					"sysfs_atomic_write_unit_max="$sysfs_atomic_write_unit_max
+					"sysfs_atomic_write_unit_max="$sysfs_atomic_write_unit_max \
+					"md_chunk_size="$md_chunk_size
 			fi
 
 			test_desc="TEST 10 RAID $raid_level - perform a pwritev2 with size of sysfs_atomic_unit_min_bytes "
@@ -255,7 +271,8 @@ _md_atomics_test() {
 				echo "$test_desc - pass"
 			else
 				echo "$test_desc - fail bytes_written="$bytes_written \
-					"sysfs_atomic_write_unit_min="$sysfs_atomic_write_unit_min
+					"sysfs_atomic_write_unit_min="$sysfs_atomic_write_unit_min \
+					"md_chunk_size="$md_chunk_size
 			fi
 
 			bytes_to_write=$(( "${sysfs_atomic_write_unit_min}" - "${sysfs_logical_block_size}" ))
@@ -271,7 +288,8 @@ _md_atomics_test() {
 					echo "$test_desc - pass"
 				else
 					echo "$test_desc - fail bytes_written="$bytes_written \
-						"bytes_to_write="$bytes_to_write
+						"bytes_to_write="$bytes_to_write \
+						"md_chunk_size="$md_chunk_size
 				fi
 			fi
 			mdadm --stop /dev/md/blktests_md  2> /dev/null 1>&2
