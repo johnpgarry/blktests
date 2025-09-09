@@ -18,7 +18,7 @@ _md_atomics_test() {
 	local md_atomic_unit_max
 	local md_atomic_unit_min
 	local md_sysfs_max_hw_sectors_kb
-	local md_max_hw
+	local md_sysfs_max_hw
 	local md_chunk_size
 	local md_chunk_size
 	local sysfs_logical_block_size
@@ -142,23 +142,13 @@ _md_atomics_test() {
 			md_dev_sysfs="/sys/devices/virtual/block/${md_dev}"
 
 			sysfs_logical_block_size=$(< "${md_dev_sysfs}"/queue/logical_block_size)
-	#		echo "sysfs_logical_block_size="$sysfs_logical_block_size
 			md_sysfs_max_hw_sectors_kb=$(< "${md_dev_sysfs}"/queue/max_hw_sectors_kb)
-	#		echo "md_sysfs_max_hw_sectors_kb="$md_sysfs_max_hw_sectors_kb
-			md_max_hw=$(( "$md_sysfs_max_hw_sectors_kb" * 1024 ))
-	#		echo "md_max_hw="$md_max_hw
+			md_sysfs_max_hw=$(( "$md_sysfs_max_hw_sectors_kb" * 1024 ))
 			sysfs_atomic_write_max=$(< "${md_dev_sysfs}"/queue/atomic_write_max_bytes)
-	#		echo "sysfs_atomic_write_max="$sysfs_atomic_write_max
 			sysfs_atomic_write_unit_max=$(< "${md_dev_sysfs}"/queue/atomic_write_unit_max_bytes)
-	#		echo "sysfs_atomic_write_unit_max="$sysfs_atomic_write_unit_max
 			sysfs_atomic_write_unit_min=$(< "${md_dev_sysfs}"/queue/atomic_write_unit_min_bytes)
-	#		echo "sysfs_atomic_write_unit_min="$sysfs_atomic_write_unit_min
 			sysfs_atomic_write_boundary=$(< "${md_dev_sysfs}"/queue/atomic_write_boundary_bytes)
 			echo "sysfs_atomic_write_boundary="$sysfs_atomic_write_boundary
-	#		md_atomic_unit_max=$(( "$scsi_debug_atomic_wr_max_length" * "$sysfs_logical_block_size" ))
-	#		echo "md_atomic_unit_max="$md_atomic_unit_max
-	#		md_atomic_unit_min=$(( "$scsi_debug_atomic_wr_gran" * "$sysfs_logical_block_size" ))
-	#		echo "md_atomic_unit_min="$md_atomic_unit_min
 
 			test_desc="TEST 1 RAID $raid_level - Verify md sysfs atomic attributes matches"
 			if [ "$sysfs_atomic_write_unit_max" = "$md_expected_atomic_write_unit_max" ] &&
@@ -173,13 +163,13 @@ _md_atomics_test() {
 			fi
 
 			test_desc="TEST 2 RAID $raid_level - Verify sysfs atomic attributes"
-			if [ "$md_max_hw" -ge "$sysfs_atomic_write_max" ] &&
+			if [ "$md_sysfs_max_hw" -ge "$sysfs_atomic_write_max" ] &&
 				[ "$sysfs_atomic_write_max" -ge "$sysfs_atomic_write_unit_max" ] &&
 				[ "$sysfs_atomic_write_unit_max" -ge "$sysfs_atomic_write_unit_min" ]
 			then
 				echo "$test_desc - pass"
 			else
-				echo "$test_desc - fail $md_max_hw="$md_max_hw \
+				echo "$test_desc - fail $md_sysfs_max_hw="$md_sysfs_max_hw \
 					"sysfs_atomic_write_max="$sysfs_atomic_write_max \
 					"sysfs_atomic_write_unit_min="$sysfs_atomic_write_unit_min \
 					"sysfs_atomic_write_unit_max="$sysfs_atomic_write_unit_max
