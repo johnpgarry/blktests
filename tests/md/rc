@@ -30,11 +30,11 @@ _md_atomics_test() {
 	local test_desc
 	local md_dev
 	local md_dev_sysfs
-	local expected_atomic_unit_min
-	local expected_atomic_unit_max
-	local expected_atomic_max
-	local expected_atomic_boundary
-	local expected_atomic_supported=1
+	local expected_atomic_write_unit_min
+	local expected_atomic_write_unit_max
+	local expected_atomic_write_max
+	local expected_atomic_write_boundary
+	local expected_atomic_write_supported=1
 
 	dev0=$1
 	dev1=$2
@@ -44,56 +44,56 @@ _md_atomics_test() {
 	unset MD_DEVICES
 	MD_DEVICES=($dev0 $dev1 $dev2 $dev3);
 
-	expected_atomic_unit_min=$(< /sys/block/"$dev0"/queue/atomic_write_unit_min_bytes);
-	expected_atomic_unit_max=$(< /sys/block/"$dev0"/queue/atomic_write_unit_max_bytes);
-	expected_atomic_max=$(< /sys/block/"$dev0"/queue/atomic_write_max_bytes);
-	expected_atomic_boundary=$(< /sys/block/"$dev0"/queue/atomic_write_boundary_bytes);
+	expected_atomic_write_unit_min=$(< /sys/block/"$dev0"/queue/atomic_write_unit_min_bytes);
+	expected_atomic_write_unit_max=$(< /sys/block/"$dev0"/queue/atomic_write_unit_max_bytes);
+	expected_atomic_write_max=$(< /sys/block/"$dev0"/queue/atomic_write_max_bytes);
+	expected_atomic_write_boundary=$(< /sys/block/"$dev0"/queue/atomic_write_boundary_bytes);
 
-#	echo "before expected_atomic_unit_min="$expected_atomic_unit_min
-#	echo "before expected_atomic_unit_max="$expected_atomic_unit_max
-#	echo "before expected_atomic_max="$expected_atomic_max
-#	echo "before expected_atomic_boundary="$expected_atomic_boundary
-#	echo "before expected_atomic_supported="$expected_atomic_supported
+#	echo "before expected_atomic_write_unit_min="$expected_atomic_write_unit_min
+#	echo "before expected_atomic_write_unit_max="$expected_atomic_write_unit_max
+#	echo "before expected_atomic_write_max="$expected_atomic_write_max
+#	echo "before expected_atomic_write_boundary="$expected_atomic_write_boundary
+#	echo "before expected_atomic_write_supported="$expected_atomic_write_supported
 	for i in "${MD_DEVICES[@]}"; do
 		echo "llowwpiu MD_DEVICES="$i" unit min="$(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes)
 		echo "llowwpiu MD_DEVICES="$i" unit max="$(< /sys/block/"$i"/queue/atomic_write_unit_max_bytes)
 		echo "llowwpiu MD_DEVICES="$i" max="$(< /sys/block/"$i"/queue/atomic_write_max_bytes)
 		echo "llowwpiu MD_DEVICES="$i" boundary="$(< /sys/block/"$i"/queue/atomic_write_boundary_bytes)
-		if [[ $(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes) -gt expected_atomic_unit_min ]]; then
-			expected_atomic_unit_min=$(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes)
+		if [[ $(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes) -gt expected_atomic_write_unit_min ]]; then
+			expected_atomic_write_unit_min=$(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes)
 		fi
-		if [[ $(< /sys/block/"$i"/queue/atomic_write_unit_max_bytes) -lt expected_atomic_unit_max ]]; then
-			expected_atomic_unit_max=$(< /sys/block/"$i"/queue/atomic_write_unit_max_bytes)
+		if [[ $(< /sys/block/"$i"/queue/atomic_write_unit_max_bytes) -lt expected_atomic_write_unit_max ]]; then
+			expected_atomic_write_unit_max=$(< /sys/block/"$i"/queue/atomic_write_unit_max_bytes)
 		fi
-		if [[ $(< /sys/block/"$i"/queue/atomic_write_max_bytes) -lt expected_atomic_max ]]; then
-			expected_atomic_max=$(< /sys/block/"$i"/queue/atomic_write_max_bytes)
+		if [[ $(< /sys/block/"$i"/queue/atomic_write_max_bytes) -lt expected_atomic_write_max ]]; then
+			expected_atomic_write_max=$(< /sys/block/"$i"/queue/atomic_write_max_bytes)
 		fi
 		# The kernel only supports same boundary size for all devices in the array
-		if [[ $(< /sys/block/"$i"/queue/atomic_write_boundary_bytes) -ne expected_atomic_boundary ]]; then
-			let expected_atomic_supported=0;
+		if [[ $(< /sys/block/"$i"/queue/atomic_write_boundary_bytes) -ne expected_atomic_write_boundary ]]; then
+			let expected_atomic_write_supported=0;
 		fi
 	done
 
-#	echo "after expected_atomic_unit_min="$expected_atomic_unit_min
-#	echo "after expected_atomic_unit_max="$expected_atomic_unit_max
-#	echo "after expected_atomic_max="$expected_atomic_max
-#	echo "after expected_atomic_boundary="$expected_atomic_boundary
-#	echo "after expected_atomic_supported="$expected_atomic_supported
+#	echo "after expected_atomic_write_unit_min="$expected_atomic_write_unit_min
+#	echo "after expected_atomic_write_unit_max="$expected_atomic_write_unit_max
+#	echo "after expected_atomic_write_max="$expected_atomic_write_max
+#	echo "after expected_atomic_write_boundary="$expected_atomic_write_boundary
+#	echo "after expected_atomic_write_supported="$expected_atomic_write_supported
 
 	# We cannot support atomic writes for the array of devices supported
 	# However we can still test that the stacked device does not support
 	# atomic writes (which it shouldn't).
-	if [[ expected_atomic_supported -eq 0 ]]; then
-		let expected_atomic_unit_min=0;
-		let expected_atomic_unit_max=0;
-		let expected_atomic_max=0;
-		let expected_atomic_boundary=0;
+	if [[ expected_atomic_write_supported -eq 0 ]]; then
+		let expected_atomic_write_unit_min=0;
+		let expected_atomic_write_unit_max=0;
+		let expected_atomic_write_max=0;
+		let expected_atomic_write_boundary=0;
 	fi
-	echo "finally expected_atomic_unit_min="$expected_atomic_unit_min
-	echo "finally expected_atomic_unit_max="$expected_atomic_unit_max
-	echo "finally expected_atomic_max="$expected_atomic_max
-	echo "finally expected_atomic_boundary="$expected_atomic_boundary
-	echo "finally expected_atomic_supported="$expected_atomic_supported
+	echo "finally expected_atomic_write_unit_min="$expected_atomic_write_unit_min
+	echo "finally expected_atomic_write_unit_max="$expected_atomic_write_unit_max
+	echo "finally expected_atomic_write_max="$expected_atomic_write_max
+	echo "finally expected_atomic_write_boundary="$expected_atomic_write_boundary
+	echo "finally expected_atomic_write_supported="$expected_atomic_write_supported
 
 	for raid_level in 0 1 10; do
 		echo "raid_level="$raid_level
@@ -124,13 +124,13 @@ _md_atomics_test() {
 #		echo "md_atomic_unit_min="$md_atomic_unit_min
 
 		test_desc="TEST 1 RAID $raid_level - Verify md sysfs atomic attributes matches"
-		if [ "$md_sysfs_atomic_unit_max" = "$expected_atomic_unit_max" ] &&
-			[ "$md_sysfs_atomic_unit_min" = "$expected_atomic_unit_min" ]
+		if [ "$md_sysfs_atomic_unit_max" = "$expected_atomic_write_unit_max" ] &&
+			[ "$md_sysfs_atomic_unit_min" = "$expected_atomic_write_unit_min" ]
 		then
 			echo "$test_desc - pass"
 		else
-			echo "$test_desc - fail $md_sysfs_atomic_unit_max - $expected_atomic_unit_max and " \
-				"$md_sysfs_atomic_unit_min - $expected_atomic_unit_min "
+			echo "$test_desc - fail $md_sysfs_atomic_unit_max - $expected_atomic_write_unit_max and " \
+				"$md_sysfs_atomic_unit_min - $expected_atomic_write_unit_min "
 		fi
 
 		test_desc="TEST 2 RAID $raid_level - Verify sysfs atomic attributes"
@@ -147,27 +147,27 @@ _md_atomics_test() {
 
 		test_desc="TEST 3 RAID $raid_level - Verify md sysfs_atomic_max_bytes is less than or equal "
 		test_desc+="sysfs_atomic_max_bytes"
-		if [ "$md_sysfs_atomic_max" -le "$expected_atomic_max" ]
+		if [ "$md_sysfs_atomic_max" -le "$expected_atomic_write_max" ]
 		then
 			echo "$test_desc - pass"
 		else
-			echo "$test_desc - fail $md_sysfs_atomic_max - $expected_atomic_max"
+			echo "$test_desc - fail $md_sysfs_atomic_max - $expected_atomic_write_max"
 		fi
 
-		test_desc="TEST 4 RAID $raid_level - check sysfs atomic_write_unit_max_bytes <= debug atomic_wr_max_length"
-		if [ "$md_sysfs_atomic_unit_max" -le "$expected_atomic_unit_max" ]
+		test_desc="TEST 4 RAID $raid_level - check sysfs atomic_write_unit_max_bytes <=  expected_atomic_write_unit_max"
+		if [ "$md_sysfs_atomic_unit_max" -le "$expected_atomic_write_unit_max" ]
 		then
 			echo "$test_desc - pass"
 		else
-			echo "$test_desc - fail $md_sysfs_atomic_unit_max - $expected_atomic_unit_max"
+			echo "$test_desc - fail $md_sysfs_atomic_unit_max - $expected_atomic_write_unit_max"
 		fi
 
 		test_desc="TEST 5 RAID $raid_level - check sysfs atomic_write_unit_min_bytes = expected atomic_write_unit_min_bytes"
-		if [ "$md_sysfs_atomic_unit_min" = "$expected_atomic_unit_min" ]
+		if [ "$md_sysfs_atomic_unit_min" = "$expected_atomic_write_unit_min" ]
 		then
 			echo "$test_desc - pass"
 		else
-			echo "$test_desc - fail $md_sysfs_atomic_unit_min - $expected_atomic_unit_min"
+			echo "$test_desc - fail $md_sysfs_atomic_unit_min - $expected_atomic_write_unit_min"
 		fi
 
 		test_desc="TEST 6 RAID $raid_level - check statx stx_atomic_write_unit_min"
@@ -242,10 +242,10 @@ _md_atomics_test() {
 
 		if [ "$raid_level" = 0 ] || [ "$raid_level" = 10 ]
 		then
-			chunk_gran=$(( "$expected_atomic_unit_max" / 4))
-			if [ "$chunk_gran" -lt "$expected_atomic_unit_min" ]
+			chunk_gran=$(( "$expected_atomic_write_unit_max" / 4))
+			if [ "$chunk_gran" -lt "$expected_atomic_write_unit_min" ]
 			then
-				chunk_gran=$expected_atomic_unit_min
+				chunk_gran=$expected_atomic_write_unit_min
 			fi
 			local chunk_multiple=1
 			for step in `seq 1 6`
