@@ -36,7 +36,6 @@ _md_atomics_boundaries_max() {
 	boundary=$1
 	chunk=$2
 	unit=$3
-	retval=""
 
 	if [ "$boundary" -eq 0 ]
 	then
@@ -45,27 +44,43 @@ _md_atomics_boundaries_max() {
 			retval=$(_max_pow_of_two_factor $chunk)
 			echo "$retval"
 			return 1
-		else
+		fi
+
+		echo "$chunk"
+		return 1
+	fi
+
+	# boundary is always a power-of-2
+	if [ "$boundary" -eq "$chunk" ]
+	then
+		echo "$boundary"
+		return 1
+	fi
+
+	if [ "$boundary" -gt "$chunk" ]
+	then
+		if (( $boundary % $chunk == 0))
+		then
+			if [ "$unit" -eq 1 ]
+			then
+				retval=$(_max_pow_of_two_factor $chunk)
+				echo "$retval"
+				return 1
+			fi
 			echo "$chunk"
 			return 1
 		fi
-
+		echo "0"
 		return 1
 	fi
 
-	if [ "$boundary" -eq "$chunk" ]
+	if (( $chunk % $boundary == 0))
 	then
 		echo "$boundary"
 		return 1
 	fi
 
-	if [ "$boundary" -eq "$chunk" ]
-	then
-		echo "$boundary"
-		return 1
-	fi
-
-	echo "$retval"
+	echo "0"
 }
 
 _md_atomics_test() {
