@@ -487,7 +487,7 @@ _dm_atomics_test() {
 				atomics_boundaries_max=$(_md_atomics_boundaries_max $raw_atomic_write_boundary $md_chunk_size "0")
 				echo "grace0 md_level"=$md_level" should be stripe"
 				
-				echo y | lvm lvcreate --stripes 4 --stripesize 256 -L 10M -n blktests_lv blktests_vg00
+				echo y | lvm lvcreate --stripes 4 --stripesize "${md_chunk_size_kb}" -L 10M -n blktests_lv blktests_vg00
 				echo "grace1 raw boundary="$raw_atomic_write_boundary" md_chunk_size="$md_chunk_size" atomics_boundaries_unit_max="$atomics_boundaries_unit_max" atomics_boundaries_max="$atomics_boundaries_max
 				echo "grace2 before expected_atomic_write_unit_min="$expected_atomic_write_unit_min
 				echo "grace3 before expected_atomic_write_unit_max="$expected_atomic_write_unit_max
