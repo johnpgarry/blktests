@@ -171,7 +171,7 @@ _md_atomics_test() {
 		fi
 
 		local chunk_multiple=1
-		for step in `seq 1 6`
+		for step in `seq 1 $step_limit`
 		do
 			echo "chunky1 chunk_gran="$chunk_gran" personality="$personality" step="$step" step_limit="$step_limit
 			local expected_atomic_write_unit_min
@@ -179,7 +179,8 @@ _md_atomics_test() {
 			local expected_atomic_write_max
 			local expected_atomic_write_boundary
 
-			if [ "$personality" = 0 ]
+			# only raid0 does not require a power-of-2 chunk size
+			if [ "$personality" = raid0 ]
 			then
 				chunk_multiple=$step
 			else
@@ -253,7 +254,7 @@ _md_atomics_test() {
 			then
 				atomics_boundaries_unit_max=$(_md_atomics_boundaries_max $raw_atomic_write_boundary $md_chunk_size "1")
 				atomics_boundaries_max=$(_md_atomics_boundaries_max $raw_atomic_write_boundary $md_chunk_size "0")
-				echo "monty0 personality"=$personality" should be linear"
+				echo "monty0 personality"=$personality" should be stripe"
 				
 				echo y | lvm lvcreate --stripes 4 --stripesize "${md_chunk_size_kb}" -L 10M -n blktests_lv blktests_vg00 2> /dev/null 1>&2
 				md_dev=$(readlink /dev/mapper/blktests_vg00-blktests_lv | sed 's|\.\./||')
