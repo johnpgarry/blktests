@@ -85,11 +85,17 @@ _md_atomics_test() {
 
 	for raid_level in 0 1 10; do
 		# We loop for different chunk sizes, even though it is not relevant to RAID1
-		chunk_gran=$(( "$raw_atomic_write_unit_max" / 4))
-		if [ "$chunk_gran" -lt "$expected_atomic_write_unit_min" ]
+		if [ "$raw_atomic_write_unit_max" -gt 0 ]
 		then
-			chunk_gran=$expected_atomic_write_unit_min
+			chunk_gran=$(( "$raw_atomic_write_unit_max" / 4))
+			if [ "$chunk_gran" -lt 4096 ]
+			then
+				let chunk_gran=4096
+			fi
+		else
+			let chunk_gran=4096
 		fi
+
 		local chunk_multiple=1
 		for step in `seq 1 6`
 		do
@@ -106,8 +112,8 @@ _md_atomics_test() {
 				chunk_multiple=$(( 2 * "$chunk_multiple"))
 			fi
 			md_chunk_size=$(( "$chunk_gran" * "$chunk_multiple"))
-			echo "chunky2 md_chunk_size="$md_chunk_size" chunk_multiple="$chunk_multiple
 			md_chunk_size_kb=$(( "$md_chunk_size" / 1024))
+			echo "chunky2 md_chunk_size="$md_chunk_size" chunk_multiple="$chunk_multiple" md_chunk_size_kb="$md_chunk_size_kb
 
 			# We may reassign these for RAID0/10
 			let expected_atomic_write_unit_min=$raw_atomic_write_unit_min
