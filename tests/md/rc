@@ -202,6 +202,15 @@ _md_atomics_test() {
 					"md_chunk_size="$md_chunk_size
 			fi
 
+			test_desc="TEST 5a RAID $raid_level - check sysfs atomic_write_unit_boundary_bytes = expected atomic_write_unit_boundary_bytes"
+			if [ "$atomic_write_unit_boundary_bytes" = "$atomic_write_unit_boundary_bytes" ]
+			then
+				echo "$test_desc - pass"
+			else
+				echo "$test_desc - fail atomic_write_unit_boundary_bytes="$atomic_write_unit_boundary_bytes \
+					"atomic_write_unit_boundary_bytes="$atomic_write_unit_boundary_bytes
+			fi
+
 			test_desc="TEST 6 RAID $raid_level - check statx stx_atomic_write_unit_min"
 			statx_atomic_write_unit_min=$(run_xfs_io_xstat /dev/"$md_dev" "stat.atomic_write_unit_min")
 			if [ "$statx_atomic_write_unit_min" = "$sysfs_atomic_write_unit_min" ]
