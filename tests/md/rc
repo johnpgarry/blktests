@@ -30,11 +30,11 @@ _md_atomics_test() {
 	local test_desc
 	local md_dev
 	local md_dev_sysfs
-	local expected_atomic_write_unit_min
-	local expected_atomic_write_unit_max
-	local expected_atomic_write_max
-	local expected_atomic_write_boundary
-	local expected_atomic_write_supported=1
+	local raw_atomic_write_unit_min
+	local raw_atomic_write_unit_max
+	local raw_atomic_write_max
+	local raw_atomic_write_boundary
+	local raw_atomic_write_supported=1
 
 	dev0=$1
 	dev1=$2
@@ -44,47 +44,48 @@ _md_atomics_test() {
 	unset MD_DEVICES
 	MD_DEVICES=($dev0 $dev1 $dev2 $dev3);
 
+	# Calculate what we expect the atomic write limits to be
+	# Don't consider any chunk size at this stage
 	# Use the limits from the first device and then loop again to find lowest common supported
-	expected_atomic_write_unit_min=$(< /sys/block/"$dev0"/queue/atomic_write_unit_min_bytes);
-	expected_atomic_write_unit_max=$(< /sys/block/"$dev0"/queue/atomic_write_unit_max_bytes);
-	expected_atomic_write_max=$(< /sys/block/"$dev0"/queue/atomic_write_max_bytes);
-	expected_atomic_write_boundary=$(< /sys/block/"$dev0"/queue/atomic_write_boundary_bytes);
+	raw_atomic_write_unit_min=$(< /sys/block/"$dev0"/queue/atomic_write_unit_min_bytes);
+	raw_atomic_write_unit_max=$(< /sys/block/"$dev0"/queue/atomic_write_unit_max_bytes);
+	raw_atomic_write_max=$(< /sys/block/"$dev0"/queue/atomic_write_max_bytes);
+	raw_atomic_write_boundary=$(< /sys/block/"$dev0"/queue/atomic_write_boundary_bytes);
 
 	for i in "${MD_DEVICES[@]}"; do
 		if [[ $(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes) -gt expected_atomic_write_unit_min ]]; then
-			expected_atomic_write_unit_min=$(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes)
+			raw_atomic_write_unit_min=$(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes)
 		fi
 		if [[ $(< /sys/block/"$i"/queue/atomic_write_unit_max_bytes) -lt expected_atomic_write_unit_max ]]; then
-			expected_atomic_write_unit_max=$(< /sys/block/"$i"/queue/atomic_write_unit_max_bytes)
+			raw_atomic_write_unit_max=$(< /sys/block/"$i"/queue/atomic_write_unit_max_bytes)
 		fi
 		if [[ $(< /sys/block/"$i"/queue/atomic_write_max_bytes) -lt expected_atomic_write_max ]]; then
-			expected_atomic_write_max=$(< /sys/block/"$i"/queue/atomic_write_max_bytes)
+			raw_atomic_write_max=$(< /sys/block/"$i"/queue/atomic_write_max_bytes)
 		fi
 		# The kernel only supports same boundary size for all devices in the array
 		if [[ $(< /sys/block/"$i"/queue/atomic_write_boundary_bytes) -ne expected_atomic_write_boundary ]]; then
-			let expected_atomic_write_supported=0;
+			let raw_atomic_write_supported=0;
 		fi
 	done
-
 
 	# We cannot support atomic writes for the array of devices supported
 	# However we can still test that the stacked device does not support
 	# atomic writes (which it shouldn't).
-	if [[ expected_atomic_write_supported -eq 0 ]]; then
-		let expected_atomic_write_unit_min=0;
-		let expected_atomic_write_unit_max=0;
-		let expected_atomic_write_max=0;
-		let expected_atomic_write_boundary=0;
+	if [[ raw_atomic_write_supported -eq 0 ]]; then
+		let raw_atomic_write_unit_min=0;
+		let raw_atomic_write_unit_max=0;
+		let raw_atomic_write_max=0;
+		let raw_atomic_write_boundary=0;
 	fi
-	echo "finally expected_atomic_write_unit_min="$expected_atomic_write_unit_min
-	echo "finally expected_atomic_write_unit_max="$expected_atomic_write_unit_max
-	echo "finally expected_atomic_write_max="$expected_atomic_write_max
-	echo "finally expected_atomic_write_boundary="$expected_atomic_write_boundary
-	echo "finally expected_atomic_write_supported="$expected_atomic_write_supported
+	echo "finally raw_atomic_write_unit_min="$raw_atomic_write_unit_min
+	echo "finally raw_atomic_write_unit_max="$raw_atomic_write_unit_max
+	echo "finally raw_atomic_write_max="$raw_atomic_write_max
+	echo "finally raw_atomic_write_boundary="$raw_atomic_write_boundary
+	echo "finally raw_atomic_write_supported="$raw_atomic_write_supported
 
 	for raid_level in 0 1 10; do
 		# We loop for different chunk sizes, even though it is not relevant to RAID1
-		chunk_gran=$(( "$expected_atomic_write_unit_max" / 4))
+		chunk_gran=$(( "$raw_atomic_write_unit_max" / 4))
 		if [ "$chunk_gran" -lt "$expected_atomic_write_unit_min" ]
 		then
 			chunk_gran=$expected_atomic_write_unit_min
@@ -93,10 +94,10 @@ _md_atomics_test() {
 		for step in `seq 1 6`
 		do
 			echo "chunky1 chunk_gran="$chunk_gran" raid_level="$raid_level" step="$step
-			local md_expected_atomic_write_unit_min
-			local md_expected_atomic_write_unit_max
-			local md_expected_atomic_write_max
-			local md_chunk_atomic_write_boundary
+			local expected_atomic_write_unit_min
+			local expected_atomic_write_unit_max
+			local expected_atomic_write_max
+			local expected_atomic_write_boundary
 
 			if [ "$raid_level" = 0 ]
 			then
@@ -109,10 +110,10 @@ _md_atomics_test() {
 			md_chunk_size_kb=$(( "$md_chunk_size" / 1024))
 
 			# We may reassign these for RAID0/10
-			let md_expected_atomic_write_unit_min=$expected_atomic_write_unit_min
-			let md_expected_atomic_write_unit_max=$expected_atomic_write_unit_max
-			let md_expected_atomic_write_max=$expected_atomic_write_max
-			let md_expected_atomic_write_boundary=$expected_atomic_write_boundary
+			let expected_atomic_write_unit_min=$raw_atomic_write_unit_min
+			let expected_atomic_write_unit_max=$raw_atomic_write_unit_max
+			let expected_atomic_write_max=$raw_atomic_write_max
+			let expected_atomic_write_boundary=$raw_atomic_write_boundary
 
 			if [ "$raid_level" = 0 ] || [ "$raid_level" = 10 ]
 			then
@@ -120,11 +121,11 @@ _md_atomics_test() {
 					 --chunk="${md_chunk_size_kb}"K \
 					--raid-devices=4 --force /dev/"${dev0}" /dev/"${dev1}" \
 					/dev/"${dev2}" /dev/"${dev3}" 2> /dev/null 1>&2
-				if [ "$expected_atomic_write_boundary" -gt 0 ]
+				if [ "$raw_atomic_write_boundary" -gt 0 ]
 				then
-					echo "grace we have a boundary="$expected_atomic_write_boundary
+					echo "grace we have a raw boundary="$raw_atomic_write_boundary
 				else
-					echo "grace we have no boundary="$expected_atomic_write_boundary
+					echo "grace we have no raw boundary="$raw_atomic_write_boundary
 				fi
 			else
 				echo y | mdadm --create /dev/md/blktests_md --level=$raid_level \
@@ -145,15 +146,15 @@ _md_atomics_test() {
 			echo "sysfs_atomic_write_boundary="$sysfs_atomic_write_boundary
 
 			test_desc="TEST 1 RAID $raid_level - Verify md sysfs atomic attributes matches"
-			if [ "$sysfs_atomic_write_unit_max" = "$md_expected_atomic_write_unit_max" ] &&
-				[ "$sysfs_atomic_write_unit_min" = "$md_expected_atomic_write_unit_min" ]
+			if [ "$sysfs_atomic_write_unit_max" = "$expected_atomic_write_unit_max" ] &&
+				[ "$sysfs_atomic_write_unit_min" = "$expected_atomic_write_unit_min" ]
 			then
 				echo "$test_desc - pass"
 			else
 				echo "$test_desc - fail sysfs_atomic_write_unit_min="$sysfs_atomic_write_unit_min \
 					"sysfs_atomic_write_unit_max="$sysfs_atomic_write_unit_max \
-					"md_expected_atomic_write_unit_min="$md_expected_atomic_write_unit_min \
-					"md_expected_atomic_write_unit_max="$md_expected_atomic_write_unit_max \
+					"expected_atomic_write_unit_min="$expected_atomic_write_unit_min \
+					"expected_atomic_write_unit_max="$expected_atomic_write_unit_max \
 					"md_chunk_size="$md_chunk_size
 			fi
 
