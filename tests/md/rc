@@ -158,8 +158,12 @@ _md_atomics_test() {
 	echo "finally raw_atomic_write_supported="$raw_atomic_write_supported
 
 	for personality in raid0 raid1 raid10 dm-linear dm-stripe; do
-		# We loop for different chunk sizes, even though it not
-		# relevant to all personalities
+		if [ "$personality" = raid0 ] || [ "$personality" = raid10 ] || [ "$personality" = dm-stripe ]
+		then
+			step_limit=6
+		else
+			step_limit=1
+		fi
 		chunk_gran=$(( "$raw_atomic_write_unit_max" / 4))
 		if [ "$chunk_gran" -lt 4096 ]
 		then
@@ -169,7 +173,7 @@ _md_atomics_test() {
 		local chunk_multiple=1
 		for step in `seq 1 6`
 		do
-			echo "chunky1 chunk_gran="$chunk_gran" personality="$personality" step="$step
+			echo "chunky1 chunk_gran="$chunk_gran" personality="$personality" step="$step" step_limit="$step_limit
 			local expected_atomic_write_unit_min
 			local expected_atomic_write_unit_max
 			local expected_atomic_write_max
@@ -232,18 +236,17 @@ _md_atomics_test() {
 			then
 			
 				echo "sheba0 calling pvcreate for "$personality" ""${dev0}"
-				pvcreate /dev/"${dev0}"
+				pvcreate /dev/"${dev0}" 2> /dev/null 1>&2
 				echo "sheba0 calling pvcreate for "$personality" ""${dev1}"
-				pvcreate /dev/"${dev1}"
+				pvcreate /dev/"${dev1}" 2> /dev/null 1>&2
 				echo "sheba0 calling pvcreate for "$personality" ""${dev2}"
-				pvcreate /dev/"${dev2}"
+				pvcreate /dev/"${dev2}" 2> /dev/null 1>&2
 				echo "sheba0 calling pvcreate for "$personality" ""${dev3}"
-				pvcreate /dev/"${dev3}"
+				pvcreate /dev/"${dev3}" 2> /dev/null 1>&2
 				
 				echo "sheba1 calling vgcreate personality"=$personality" should be linear or stripe"
 				echo y | vgcreate blktests_vg00 /dev/"${dev0}" /dev/"${dev1}" \
-						/dev/"${dev2}" /dev/"${dev3}"
-				# 2> /dev/null 1>&2
+						/dev/"${dev2}" /dev/"${dev3}" 2> /dev/null 1>&2
 			fi
 
 			if [ "$personality" = dm-stripe ]
@@ -252,7 +255,7 @@ _md_atomics_test() {
 				atomics_boundaries_max=$(_md_atomics_boundaries_max $raw_atomic_write_boundary $md_chunk_size "0")
 				echo "monty0 personality"=$personality" should be linear"
 				
-				echo y | lvm lvcreate --stripes 4 --stripesize "${md_chunk_size_kb}" -L 10M -n blktests_lv blktests_vg00
+				echo y | lvm lvcreate --stripes 4 --stripesize "${md_chunk_size_kb}" -L 10M -n blktests_lv blktests_vg00 2> /dev/null 1>&2
 				md_dev=$(readlink /dev/mapper/blktests_vg00-blktests_lv | sed 's|\.\./||')
 				echo "grace1 raw boundary="$raw_atomic_write_boundary" md_chunk_size="$md_chunk_size" atomics_boundaries_unit_max="$atomics_boundaries_unit_max" atomics_boundaries_max="$atomics_boundaries_max
 				echo "grace2 before expected_atomic_write_unit_min="$expected_atomic_write_unit_min
@@ -275,8 +278,7 @@ _md_atomics_test() {
 			if [ "$personality" = dm-linear ]
 			then
 				echo "monty1 personality"=$personality" should be linear"
-				echo y | lvm lvcreate -v -n blktests_lv -L 10M blktests_vg00 
-				#2> /dev/null 1>&2
+				echo y | lvm lvcreate -v -n blktests_lv -L 10M blktests_vg00 2> /dev/null 1>&2
 				md_dev=$(readlink /dev/mapper/blktests_vg00-blktests_lv | sed 's|\.\./||')
 			fi
 			echo "multicomp md_dev="$md_dev 
@@ -430,10 +432,10 @@ _md_atomics_test() {
 			then
 				echo "calling mdadm --stop for "$personality
 				mdadm --stop /dev/md/blktests_md  2> /dev/null 1>&2
-				mdadm --zero-superblock /dev/"${dev0}"  2> /dev/null 1>&2
-				mdadm --zero-superblock /dev/"${dev1}"  2> /dev/null 1>&2
-				mdadm --zero-superblock /dev/"${dev2}"  2> /dev/null 1>&2
-				mdadm --zero-superblock /dev/"${dev3}"  2> /dev/null 1>&2
+				mdadm --zero-superblock /dev/"${dev0}" 2> /dev/null 1>&2
+				mdadm --zero-superblock /dev/"${dev1}" 2> /dev/null 1>&2
+				mdadm --zero-superblock /dev/"${dev2}" 2> /dev/null 1>&2
+				mdadm --zero-superblock /dev/"${dev3}" 2> /dev/null 1>&2
 			fi
 
 			if [ "$personality" = dm-linear ] || [ "$personality" = dm-stripe ]
@@ -441,12 +443,12 @@ _md_atomics_test() {
 				echo "calling lvremove for "$personality
 				lvremove --force  /dev/mapper/blktests_vg00-blktests_lv  2> /dev/null 1>&2
 				echo "calling vgremove for "$personality
-				vgremove --force blktests_vg00
+				vgremove --force blktests_vg00 2> /dev/null 1>&2
 				echo "calling pvremove for "$personality
-				pvremove --force /dev/"${dev0}"
-				pvremove --force /dev/"${dev1}"
-				pvremove --force /dev/"${dev2}"
-				pvremove --force /dev/"${dev3}"
+				pvremove --force /dev/"${dev0}" 2> /dev/null 1>&2
+				pvremove --force /dev/"${dev1}" 2> /dev/null 1>&2
+				pvremove --force /dev/"${dev2}" 2> /dev/null 1>&2
+				pvremove --force /dev/"${dev3}" 2> /dev/null 1>&2
 			fi
 			
 		done
