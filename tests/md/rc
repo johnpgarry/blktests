@@ -157,7 +157,7 @@ _md_atomics_test() {
 	echo "finally raw_atomic_write_boundary="$raw_atomic_write_boundary
 	echo "finally raw_atomic_write_supported="$raw_atomic_write_supported
 
-	for personality in dm-linear; do
+	for personality in raid0 raid1 raid10 dm-linear dm-stripe; do
 		# We loop for different chunk sizes, even though it not
 		# relevant to all personalities
 		chunk_gran=$(( "$raw_atomic_write_unit_max" / 4))
