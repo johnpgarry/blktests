@@ -182,8 +182,8 @@ _md_atomics_test() {
 					"md_chunk_size="$md_chunk_size
 			fi
 
-			test_desc="TEST 4 RAID $raid_level - check sysfs atomic_write_unit_max_bytes <=  expected_atomic_write_unit_max"
-			if [ "$sysfs_atomic_write_unit_max" -le "$expected_atomic_write_unit_max" ]
+			test_desc="TEST 4 RAID $raid_level - check sysfs atomic_write_unit_max_bytes =  expected_atomic_write_unit_max"
+			if [ "$sysfs_atomic_write_unit_max" = "$expected_atomic_write_unit_max" ]
 			then
 				echo "$test_desc - pass"
 			else
