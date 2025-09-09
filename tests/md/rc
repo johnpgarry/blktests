@@ -495,7 +495,7 @@ _dm_atomics_test() {
 				echo "grace5 before expected_atomic_write_boundary="$expected_atomic_write_boundary
 				expected_atomic_write_unit_min=$(_min $expected_atomic_write_unit_min $atomics_boundaries_unit_max)
 				expected_atomic_write_unit_max=$(_min $expected_atomic_write_unit_max $atomics_boundaries_unit_max)
-				expected_atomic_write_max=$(_min $expected_atomicmd_dev_write_max $atomics_boundaries_max)
+				expected_atomic_write_max=$(_min $expected_atomic_write_max $atomics_boundaries_max)
 				if [ "$atomics_boundaries_max" -eq 0 ]
 				then
 					expected_atomic_write_boundary=0
