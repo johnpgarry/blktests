@@ -32,33 +32,38 @@ _max_pow_of_two_factor() {
 	echo "$retval"
 }
 
-_md_atomics_boundaries_unit_max() {
-	boundary=$1
-	chunk=$2
-	retval=""
-
-	if [ "$boundary" -eq 0 ]
-	then
-		retval=$(_max_pow_of_two_factor $chunk)
-		echo "$retval"
-		return 1
-	fi
-	retval=123456
-
-	echo "$retval"
-}
-
 _md_atomics_boundaries_max() {
 	boundary=$1
 	chunk=$2
+	unit=$3
 	retval=""
 
 	if [ "$boundary" -eq 0 ]
 	then
-		echo "$chunk"
+		if [ "$unit" -eq 1 ]
+		then
+			retval=$(_max_pow_of_two_factor $chunk)
+			echo "$retval"
+			return 1
+		else
+			echo "$chunk"
+			return 1
+		fi
+
 		return 1
 	fi
-	retval=123456
+
+	if [ "$boundary" -eq "$chunk" ]
+	then
+		echo "$boundary"
+		return 1
+	fi
+
+	if [ "$boundary" -eq "$chunk" ]
+	then
+		echo "$boundary"
+		return 1
+	fi
 
 	echo "$retval"
 }
@@ -102,17 +107,17 @@ _md_atomics_test() {
 	raw_atomic_write_boundary=$(< /sys/block/"$dev0"/queue/atomic_write_boundary_bytes);
 
 	for i in "${MD_DEVICES[@]}"; do
-		if [[ $(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes) -gt expected_atomic_write_unit_min ]]; then
+		if [[ $(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes) -gt raw_atomic_write_unit_min ]]; then
 			raw_atomic_write_unit_min=$(< /sys/block/"$i"/queue/atomic_write_unit_min_bytes)
 		fi
-		if [[ $(< /sys/block/"$i"/queue/atomic_write_unit_max_bytes) -lt expected_atomic_write_unit_max ]]; then
+		if [[ $(< /sys/block/"$i"/queue/atomic_write_unit_max_bytes) -lt raw_atomic_write_unit_max ]]; then
 			raw_atomic_write_unit_max=$(< /sys/block/"$i"/queue/atomic_write_unit_max_bytes)
 		fi
-		if [[ $(< /sys/block/"$i"/queue/atomic_write_max_bytes) -lt expected_atomic_write_max ]]; then
+		if [[ $(< /sys/block/"$i"/queue/atomic_write_max_bytes) -lt raw_atomic_write_max ]]; then
 			raw_atomic_write_max=$(< /sys/block/"$i"/queue/atomic_write_max_bytes)
 		fi
 		# The kernel only supports same boundary size for all devices in the array
-		if [[ $(< /sys/block/"$i"/queue/atomic_write_boundary_bytes) -ne expected_atomic_write_boundary ]]; then
+		if [[ $(< /sys/block/"$i"/queue/atomic_write_boundary_bytes) -ne raw_atomic_write_boundary ]]; then
 			let raw_atomic_write_supported=0;
 		fi
 	done
@@ -176,8 +181,8 @@ _md_atomics_test() {
 					 --chunk="${md_chunk_size_kb}"K \
 					--raid-devices=4 --force /dev/"${dev0}" /dev/"${dev1}" \
 					/dev/"${dev2}" /dev/"${dev3}" 2> /dev/null 1>&2
-				atomics_boundaries_unit_max=$(_md_atomics_boundaries_unit_max $raw_atomic_write_boundary $md_chunk_size)
-				atomics_boundaries_max=$(_md_atomics_boundaries_max $raw_atomic_write_boundary $md_chunk_size)
+				atomics_boundaries_unit_max=$(_md_atomics_boundaries_max $raw_atomic_write_boundary $md_chunk_size "1")
+				atomics_boundaries_max=$(_md_atomics_boundaries_max $raw_atomic_write_boundary $md_chunk_size "0")
 				echo "grace1 raw boundary="$raw_atomic_write_boundary" md_chunk_size="$md_chunk_size" atomics_boundaries_unit_max="$atomics_boundaries_unit_max" atomics_boundaries_max="$atomics_boundaries_max
 				echo "grace2 before expected_atomic_write_unit_min="$expected_atomic_write_unit_min
 				echo "grace3 before expected_atomic_write_unit_max="$expected_atomic_write_unit_max
