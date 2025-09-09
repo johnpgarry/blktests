@@ -157,14 +157,9 @@ _md_atomics_test() {
 
 	for raid_level in 0 1 10; do
 		# We loop for different chunk sizes, even though it is not relevant to RAID1
-		if [ "$raw_atomic_write_unit_max" -gt 0 ]
+		chunk_gran=$(( "$raw_atomic_write_unit_max" / 4))
+		if [ "$chunk_gran" -lt 4096 ]
 		then
-			chunk_gran=$(( "$raw_atomic_write_unit_max" / 4))
-			if [ "$chunk_gran" -lt 4096 ]
-			then
-				let chunk_gran=4096
-			fi
-		else
 			let chunk_gran=4096
 		fi
 
