@@ -235,16 +235,21 @@ _md_atomics_test() {
 
 			if [ "$personality" = dm-linear ] || [ "$personality" = dm-stripe ]
 			then
-			
-				echo "sheba0 calling pvcreate for "$personality" ""${dev0}"
+				echo "sheba0 pvremove for "$personality
+				pvremove --force /dev/"${dev0}" 2> /dev/null 1>&2
+				pvremove --force /dev/"${dev1}" 2> /dev/null 1>&2
+				pvremove --force /dev/"${dev2}" 2> /dev/null 1>&2
+				pvremove --force /dev/"${dev3}" 2> /dev/null 1>&2
+
+				echo "sheba1 calling pvcreate for "$personality" ""${dev0}"
 				pvcreate /dev/"${dev0}" 2> /dev/null 1>&2
-				echo "sheba0 calling pvcreate for "$personality" ""${dev1}"
+				echo "sheba2 calling pvcreate for "$personality" ""${dev1}"
 				pvcreate /dev/"${dev1}" 2> /dev/null 1>&2
-				echo "sheba0 calling pvcreate for "$personality" ""${dev2}"
+				echo "sheba3 calling pvcreate for "$personality" ""${dev2}"
 				pvcreate /dev/"${dev2}" 2> /dev/null 1>&2
-				echo "sheba0 calling pvcreate for "$personality" ""${dev3}"
+				echo "sheba4 calling pvcreate for "$personality" ""${dev3}"
 				pvcreate /dev/"${dev3}" 2> /dev/null 1>&2
-				
+
 				echo "sheba1 calling vgcreate personality"=$personality" should be linear or stripe"
 				echo y | vgcreate blktests_vg00 /dev/"${dev0}" /dev/"${dev1}" \
 						/dev/"${dev2}" /dev/"${dev3}" 2> /dev/null 1>&2
