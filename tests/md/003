@@ -76,6 +76,7 @@ test() {
 		echo "y TEST_DEV_SYSFS="$TEST_DEV_SYSFS
 		echo "z TEST_DEV="$TEST_DEV
 		_require_device_support_atomic_writes
+		_require_test_dev_size 5m
 	done
 
 	echo "testdev_count="$testdev_count

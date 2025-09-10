@@ -266,7 +266,9 @@ _md_atomics_test() {
 				atomics_boundaries_max=$(_md_atomics_boundaries_max $raw_atomic_write_boundary $md_chunk_size "0")
 				vgsize=$(_get_vgsize)
 				echo "monty0 personality"=$personality" should be stripe vgsize="$vgsize
-				
+
+				# The caller should ensure test device size, we ask for a total of 10M
+				# So each should be at least (10M + meta) / 4 in size, so 5 each should be enough
 				echo y | lvm lvcreate --stripes 4 --stripesize "${md_chunk_size_kb}" -L 10M -n blktests_lv blktests_vg00 2> /dev/null 1>&2
 				md_dev=$(readlink /dev/mapper/blktests_vg00-blktests_lv | sed 's|\.\./||')
 				echo "grace1 raw boundary="$raw_atomic_write_boundary" md_chunk_size="$md_chunk_size" atomics_boundaries_unit_max="$atomics_boundaries_unit_max" atomics_boundaries_max="$atomics_boundaries_max
@@ -463,7 +465,6 @@ _md_atomics_test() {
 				pvremove --force /dev/"${dev2}" 2> /dev/null 1>&2
 				pvremove --force /dev/"${dev3}" 2> /dev/null 1>&2
 			fi
-			
 		done
 	done
 }
