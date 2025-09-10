@@ -88,9 +88,9 @@ _md_atomics_boundaries_max() {
 	echo "0"
 }
 
-_get_vgsize_mb() {
+_get_vgsize() {
 	vgsize=$(vgdisplay --units b blktests_vg00 | grep 'VG Size' | tr -d -c 0-9)
-	echo $(( "$vgsize" / 1024))
+	echo "$vgsize"
 }
 
 _md_atomics_test() {
@@ -258,15 +258,14 @@ _md_atomics_test() {
 				echo "sheba1 calling vgcreate personality"=$personality" should be linear or stripe"
 				echo y | vgcreate blktests_vg00 /dev/"${dev0}" /dev/"${dev1}" \
 						/dev/"${dev2}" /dev/"${dev3}" 2> /dev/null 1>&2
-				vgsize_mb=$(_get_vgsize_mb)
-				echo "sheba5 _vgsize in mb="$vgsize_mb
 			fi
 
 			if [ "$personality" = dm-stripe ]
 			then
 				atomics_boundaries_unit_max=$(_md_atomics_boundaries_max $raw_atomic_write_boundary $md_chunk_size "1")
 				atomics_boundaries_max=$(_md_atomics_boundaries_max $raw_atomic_write_boundary $md_chunk_size "0")
-				echo "monty0 personality"=$personality" should be stripe"
+				vgsize=$(_get_vgsize)
+				echo "monty0 personality"=$personality" should be stripe vgsize="$vgsize
 				
 				echo y | lvm lvcreate --stripes 4 --stripesize "${md_chunk_size_kb}" -L 10M -n blktests_lv blktests_vg00 2> /dev/null 1>&2
 				md_dev=$(readlink /dev/mapper/blktests_vg00-blktests_lv | sed 's|\.\./||')
@@ -290,8 +289,9 @@ _md_atomics_test() {
 
 			if [ "$personality" = dm-linear ]
 			then
-				echo "monty1 personality"=$personality" should be linear"
-				echo y | lvm lvcreate -v -n blktests_lv -L 10M blktests_vg00 2> /dev/null 1>&2
+				vgsize=$(_get_vgsize)
+				echo "monty1 personality"=$personality" should be linear vgsize="$vgsize
+				echo y | lvm lvcreate -v -n blktests_lv -L "${vgsize}"B blktests_vg00 2> /dev/null 1>&2
 				md_dev=$(readlink /dev/mapper/blktests_vg00-blktests_lv | sed 's|\.\./||')
 			fi
 			echo "multicomp md_dev="$md_dev 
