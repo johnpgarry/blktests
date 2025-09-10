@@ -88,6 +88,11 @@ _md_atomics_boundaries_max() {
 	echo "0"
 }
 
+_get_vgsize_mb() {
+	vgsize=$(vgdisplay --units b blktests_vg00 | grep 'VG Size' | tr -d -c 0-9)
+	echo $(( "$vgsize" / 1024))
+}
+
 _md_atomics_test() {
 	local md_atomic_unit_max
 	local md_atomic_unit_min
@@ -253,6 +258,8 @@ _md_atomics_test() {
 				echo "sheba1 calling vgcreate personality"=$personality" should be linear or stripe"
 				echo y | vgcreate blktests_vg00 /dev/"${dev0}" /dev/"${dev1}" \
 						/dev/"${dev2}" /dev/"${dev3}" 2> /dev/null 1>&2
+				vgsize_mb=$(_get_vgsize_mb)
+				echo "sheba5 _vgsize in mb="$vgsize_mb
 			fi
 
 			if [ "$personality" = dm-stripe ]
