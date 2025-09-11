@@ -1,0 +1,51 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0+
+# Copyright (C) 2025 Oracle and/or its affiliates
+#
+# Test NMVe Atomic Writes with MD devices
+
+. tests/nvme/rc
+. common/xfs
+
+DESCRIPTION="test md atomic writes for NVMe drives"
+QUICK=1
+
+requires() {
+	_nvme_requires
+}
+
+test() {
+	local ns
+	local testdev_count=0
+	declare -A NVME_TEST_DEVS
+	declare -A NVME_TEST_DEVS_NAME
+	declare -A NVME_TEST_DEVS_SYSFS
+
+	echo "Running md_atomics_test"
+
+	for i in "${!TEST_DEV_SYSFS_DIRS[@]}"; do
+		TEST_DEV=${TEST_DEV_SYSFS_DIRS[$i]}
+		if readlink -f "$TEST_DEV" | grep -q nvme; then
+			NVME_TEST_DEVS["$testdev_count"]="$i";
+			NVME_TEST_DEVS_SYSFS["$testdev_count"]="$TEST_DEV";
+			NVME_TEST_DEVS_NAME["$testdev_count"]="$(awk '{print substr($1,6)   }' <<< $i)"
+			let testdev_count=testdev_count+1;
+		fi
+	done
+
+	for ((i = 0; i < ${#NVME_TEST_DEVS[@]}; ++i)); do
+		TEST_DEV_SYSFS="${NVME_TEST_DEVS_SYSFS[$i]}"
+		TEST_DEV="${NVME_TEST_DEVS[$i]}"
+		_require_device_support_atomic_writes
+	done
+
+	if [[ $testdev_count -lt 4 ]]; then
+		SKIP_REASONS+=("requires at least 4 NVMe devices")
+		return 1
+	fi
+
+	_md_atomics_test "${NVME_TEST_DEVS_NAME[0]}" "${NVME_TEST_DEVS_NAME[1]}" \
+			"${NVME_TEST_DEVS_NAME[2]}" "${NVME_TEST_DEVS_NAME[3]}"
+
+	echo "Test complete"
+}
