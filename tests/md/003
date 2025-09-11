@@ -37,7 +37,7 @@ test() {
 		TEST_DEV_SYSFS="${NVME_TEST_DEVS_SYSFS[$i]}"
 		TEST_DEV="${NVME_TEST_DEVS[$i]}"
 		_require_device_support_atomic_writes
-		_require_test_dev_size 5m
+		_require_test_dev_size 16m
 	done
 
 	if [[ $testdev_count -lt 4 ]]; then
