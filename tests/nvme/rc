@@ -71,14 +71,6 @@ group_device_requires() {
 	_require_test_dev_is_nvme
 }
 
-_require_test_dev_is_nvme() {
-	if ! readlink -f "$TEST_DEV_SYSFS/device" | grep -q nvme; then
-		SKIP_REASONS+=("$TEST_DEV is not a NVMe device")
-		return 1
-	fi
-	return 0
-}
-
 _require_test_dev_is_nvme_pci() {
 	if [[ ! "$(readlink -f "$TEST_DEV_SYSFS/device")" =~ devices/pci ]]; then
 		SKIP_REASONS+=("$TEST_DEV is not a PCI NVMe device")
